@@ -92,7 +92,7 @@ const EditorComp = () => {
     try {
       setLoading(true);
 
-      const response = await fetch("https://code-runner.vkstore.site/run", {
+      const response = await fetch("https://code-collab-server.vkstore.site/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
