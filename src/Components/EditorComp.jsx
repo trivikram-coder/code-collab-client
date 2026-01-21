@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
 import socket from "../socket/socket";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/Editor.css";
+import UsersList from "./UsersList";
 
 const EditorComp = ({ code, language, onCodeChange }) => {
+  const navigate=useNavigate()
   const codeTemplates = {
     javascript: "console.log('Hello World');",
     typescript:
@@ -27,18 +29,35 @@ const EditorComp = ({ code, language, onCodeChange }) => {
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("");
   const [input, setInput] = useState("");
-
+  const[users,setUsers]=useState([])
   const [localLang, setLocalLang] = useState(language || "javascript");
   const [localCode, setLocalCode] = useState(
     code || codeTemplates[language] || codeTemplates["javascript"]
   );
+  useEffect(() => {
+  if (!roomId || !userName) return;
 
+  socket.emit("join-room", { roomId, userName });
+
+  const handleRoomUsers = (data) => {
+    setUsers(data);
+  };
+
+  socket.on("room-users", handleRoomUsers);
+
+  return () => {
+    socket.off("room-users", handleRoomUsers);
+  };
+}, [roomId, userName]);
   // Sync with parent when file changes
   useEffect(() => {
     setLocalLang(language || "javascript");
     setLocalCode(code || codeTemplates[language] || codeTemplates["javascript"]);
   }, [code, language]);
-
+const leaveRoom = () => {
+    socket.emit("leave-room", { roomId, userName });
+    navigate("/");
+  };
   // Code change
   const handleChange = (value) => {
     if (value === undefined) return;
@@ -92,6 +111,9 @@ const EditorComp = ({ code, language, onCodeChange }) => {
         </div>
         <div className="right">
           <span className="status-online">🟢 Online</span>
+          <button className="leave-btn" onClick={leaveRoom}>
+            Leave Room
+          </button>
         </div>
       </div>
 
@@ -155,7 +177,11 @@ const EditorComp = ({ code, language, onCodeChange }) => {
             {output || "Run code to see output"}
           </pre>
         </div>
+        <div className="users-panel">
+    <UsersList users={users} userName={userName}/>
+  </div>
       </div>
+      
     </div>
   );
 };

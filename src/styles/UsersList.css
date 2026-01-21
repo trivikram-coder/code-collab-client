@@ -1,0 +1,101 @@
+/* ---------------------------- */
+/*      USERS LIST WRAPPER      */
+/* ---------------------------- */
+.users-list-wrapper {
+  padding: 10px;
+  background: transparent;
+}
+
+.users-title {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+/* ---------------------------- */
+/*        USERS LIST ITEM       */
+/* ---------------------------- */
+.users-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.users-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  color: #e5e7eb;
+  font-weight: 600;
+}
+
+.user-dot {
+  font-size: 12px;
+}
+
+.user-name {
+  font-size: 13px;
+}
+
+/* Empty state */
+.users-empty {
+  padding: 12px;
+  text-align: center;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.users-list-wrapper {
+  padding: 10px;
+  background: transparent;
+}
+
+.users-title {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.users-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.users-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  color: #e5e7eb;
+  font-weight: 600;
+}
+
+/* highlight current user */
+.users-item.active-user {
+  background: rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(37, 99, 235, 0.6);
+}
+
+.user-dot {
+  font-size: 12px;
+}
+
+.user-name {
+  font-size: 13px;
+}
+
+.users-empty {
+  padding: 12px;
+  text-align: center;
+  color: #94a3b8;
+  font-weight: 600;
+}

@@ -1,17 +1,148 @@
+/* ------------------------------ */
+/*     EDITOR MAIN WRAPPER        */
+/* ------------------------------ */
 .editor-main-wrapper {
   background: #0f172a;
 }
 
+/* ------------------------------ */
+/*     FILE SIDEBAR STYLING       */
+/* ------------------------------ */
+.file-sidebar {
+  background: #020617;
+  border-right: 1px solid #1e293b;
+  color: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 14px;
+  border-bottom: 1px solid #1e293b;
+  background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
+}
+
+.file-header span {
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+.file-header button {
+  background: #2563eb;
+  border: none;
+  color: white;
+  font-size: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.file-header button:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
+}
+
+/* ------------------------------ */
+/*      FILE LIST STYLING         */
+/* ------------------------------ */
+.file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px;
+}
+
+.file-item {
+  padding: 10px 12px;
+  margin: 6px 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background 0.2s ease, border 0.2s ease;
+}
+
+.file-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.file-item.active {
+  background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+.file-name {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.file-user {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 3px;
+  letter-spacing: 0.2px;
+}
+
+/* ------------------------------ */
+/*      DELETE ICON STYLING       */
+/* ------------------------------ */
+.delete-icon {
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.delete-icon:hover {
+  opacity: 1;
+  color: #ef4444;
+}
+
+/* ------------------------------ */
+/*        EDITOR SECTION          */
+/* ------------------------------ */
 .editor-section {
   border-right: 1px solid #1e293b;
   background: #020617;
 }
 
-.chat-section {
-  background: #020617;
+/* ------------------------------ */
+/*         NO FILE STYLE          */
+/* ------------------------------ */
+.no-file {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+  margin: 20px;
+  padding: 20px;
+  border: 1px dashed #444;
 }
 
-
+/* ------------------------------ */
+/*        CHAT BUTTON STYLE       */
+/* ------------------------------ */
 .chat-float-btn {
   position: fixed;
   bottom: 24px;
@@ -25,6 +156,7 @@
   font-size: 22px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   z-index: 1050;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .chat-float-btn:hover {
@@ -32,20 +164,6 @@
   transform: scale(1.05);
 }
 
-/* MODAL STYLE */
-.chat-modal .modal-content {
-  height: 85vh;
-  background: #020617;
-  color: white;
-}
-
-.chat-modal .modal-header {
-  border-bottom: 1px solid #1e293b;
-}
-
-.chat-modal .modal-body {
-  height: 100%;
-}
 .chat-badge {
   position: absolute;
   top: -6px;
@@ -62,54 +180,20 @@
   justify-content: center;
   padding: 0 5px;
 }
-.file-sidebar {
+
+/* ------------------------------ */
+/*        CHAT MODAL STYLE        */
+/* ------------------------------ */
+.chat-modal .modal-content {
+  height: 85vh;
   background: #020617;
-  border-right: 1px solid #1e293b;
   color: white;
-  height: 100%;
 }
 
-.file-header {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
+.chat-modal .modal-header {
   border-bottom: 1px solid #1e293b;
 }
 
-.file-header button {
-  background: none;
-  border: none;
-  color: #22c55e;
-  font-size: 18px;
-}
-
-.file-item {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.file-item.active {
-  background: #1e293b;
-}
-.delete-icon {
-  cursor: pointer;
-  opacity: 0.7;
-}
-
-.delete-icon:hover {
-  opacity: 1;
-  color: #ef4444; /* red */
-}
-.no-file {
+.chat-modal .modal-body {
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ccc;
-  font-size: 18px;
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: 8px;
-  margin: 20px;
-  padding: 20px;
-  border: 1px dashed #444;
 }

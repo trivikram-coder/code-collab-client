@@ -5,6 +5,7 @@ import "../styles/EditorMain.css";
 import { useLocation, useParams } from "react-router-dom";
 import { Trash } from "lucide-react";
 import socket from "../socket/socket";
+import UsersList from "./UsersList";
 
 /*
   FILE STRUCTURE:
@@ -12,7 +13,8 @@ import socket from "../socket/socket";
     id,
     name,
     language,
-    content
+    content,
+    createdBy
   }
 */
 
@@ -41,10 +43,7 @@ const EditorMain = () => {
   const detectLanguage = (filename) => {
     if (!filename) return "plaintext";
 
-    const cleanName = filename
-      .trim()
-      .replace(/\s*\(\d+\)$/, "");
-
+    const cleanName = filename.trim().replace(/\s*\(\d+\)$/, "");
     const parts = cleanName.split(".");
     if (parts.length < 2) return "plaintext";
 
@@ -94,17 +93,20 @@ const EditorMain = () => {
       name: uniqueName,
       language: detectLanguage(uniqueName),
       content: "",
-      createdBy:userName
+      createdBy: userName,
     };
 
     socket.emit("file-create", {
       roomId,
       file: newFile,
     });
+
+    // 🔥 SET ACTIVE FILE IMMEDIATELY
+    setActiveFileId(newFile.id);
   };
 
   const updateFileContent = (value) => {
-    // 🔥 IMPORTANT: IGNORE REMOTE UPDATES
+    // 🔥 IGNORE REMOTE UPDATES
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
       return;
@@ -114,9 +116,7 @@ const EditorMain = () => {
 
     setFiles((prev) =>
       prev.map((file) =>
-        file.id === activeFileId
-          ? { ...file, content: value }
-          : file
+        file.id === activeFileId ? { ...file, content: value } : file
       )
     );
 
@@ -128,16 +128,23 @@ const EditorMain = () => {
   };
 
   const deleteFile = (id) => {
-    
-    socket.emit("file-delete",{
-      roomId,
-      fileId:id,
-      userName
-    })
-    const file=files.filter(file=>file.id===id)
-    if(file.createdBy!==userName){
+    const file = files.find((f) => f.id === id);
+
+    if (!file || file.createdBy !== userName) {
+      socket.emit("file-delete", {
+        roomId,
+        fileId: id,
+        userName,
+      });
       return;
     }
+
+    socket.emit("file-delete", {
+      roomId,
+      fileId: id,
+      userName,
+    });
+
     setFiles((prevFiles) => {
       const updatedFiles = prevFiles.filter((f) => f.id !== id);
 
@@ -154,21 +161,50 @@ const EditorMain = () => {
     setShowChat(true);
     setUnreadCount(0);
   };
+useEffect(() => {
+  if (!roomId || !userName) return;
 
-  useEffect(() => {
-    if (!roomId || !userName) return;
+  const joinRoom = () => {
     socket.emit("join-room", { roomId, userName });
-  }, [roomId, userName]);
+  };
+
+  // Join on first load
+  joinRoom();
+
+  // Rejoin on reconnect
+  socket.on("connect", () => {
+    joinRoom();
+  });
+
+  return () => {
+    socket.off("connect");
+  };
+}, [roomId, userName]);
+
+ useEffect(() => {
+  const handleRoomUsers = (data) => {
+    setUsers(data);
+  };
+
+  socket.on("room-users", handleRoomUsers);
+
+  return () => {
+    socket.off("room-users", handleRoomUsers);
+  };
+}, []);
 
   /* ---------------- SOCKET LISTENERS ---------------- */
   useEffect(() => {
     const handleFileCreated = (filesFromServer) => {
-      console.log(filesFromServer);
-      if (!Array.isArray(filesFromServer)) {
-        console.error("Expected files array, got:", filesFromServer);
-        return;
-      }
+      if (!Array.isArray(filesFromServer)) return;
+
       setFiles(filesFromServer);
+
+      // 🔥 FOCUS LAST FILE (NEW FILE)
+      const lastFile = filesFromServer[filesFromServer.length - 1];
+      if (lastFile) {
+        setActiveFileId(lastFile.id);
+      }
     };
 
     socket.on("file-created", handleFileCreated);
@@ -177,17 +213,19 @@ const EditorMain = () => {
       socket.off("file-created", handleFileCreated);
     };
   }, []);
-  useEffect(()=>{
-    socket.on("delete-error",({msg})=>{
-      alert(msg)
-    })
-    return ()=>{
-      socket.off("delete-error")
-    }
-  },[])
+
+  useEffect(() => {
+    socket.on("delete-error", ({ msg }) => {
+      alert(msg);
+    });
+
+    return () => {
+      socket.off("delete-error");
+    };
+  }, []);
+
   useEffect(() => {
     const handleContentUpdate = ({ fileId, content }) => {
-      // 🔥 FLAG REMOTE UPDATE
       isRemoteUpdate.current = true;
 
       setFiles((prev) =>
@@ -205,7 +243,7 @@ const EditorMain = () => {
       socket.off("file-content-updated", handleContentUpdate);
     };
   }, []);
-
+  
   /* ---------------- ACTIVE FILE SAFETY ---------------- */
   useEffect(() => {
     if (!Array.isArray(files) || files.length === 0) {
@@ -214,7 +252,6 @@ const EditorMain = () => {
     }
 
     const exists = files.some((f) => f.id === activeFileId);
-
     if (!exists) {
       setActiveFileId(files[0].id);
     }
@@ -224,32 +261,40 @@ const EditorMain = () => {
   return (
     <div className="container-fluid editor-main-wrapper">
       <div className="row vh-100">
-
         {/* FILE EXPLORER */}
         <div className="col-2 p-0 file-sidebar">
           <div className="file-header">
             <span>FILES</span>
-            <button className="add-file-btn" onClick={createFile}>＋</button>
+            <button className="add-file-btn" onClick={createFile}>
+              ＋
+            </button>
           </div>
 
-          {files.map((file) => (
-            <div
-              key={file.id}
-              className={`file-item ${file.id === activeFileId ? "active" : ""}`}
-              onClick={() => setActiveFileId(file.id)}
-            >
-              <span className="file-name">{file.name}</span>
+          {/* 🔥 SCROLLABLE FILE LIST */}
+          <div className="file-list">
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className={`file-item ${
+                  file.id === activeFileId ? "active" : ""
+                }`}
+                onClick={() => setActiveFileId(file.id)}
+              >
+                <div className="file-name">
+  {file.name} <span className="file-user">— {file.createdBy}</span>
+</div>
 
-              <Trash
-                size={16}
-                className="delete-icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteFile(file.id);
-                }}
-              />
-            </div>
-          ))}
+                <Trash
+                  size={16}
+                  className="delete-icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteFile(file.id);
+                  }}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* EDITOR */}
@@ -259,6 +304,7 @@ const EditorMain = () => {
               code={activeFile.content}
               language={activeFile.language}
               onCodeChange={updateFileContent}
+              users={users}
             />
           ) : (
             <div className="no-file">
@@ -296,7 +342,7 @@ const EditorMain = () => {
                     roomId={roomId}
                     userName={userName}
                     chatOpen={showChat}
-                    setUsersFromParent={setUsers}
+                    chatUsers={users}
                     onNewMessage={() =>
                       setUnreadCount((prev) => prev + 1)
                     }
