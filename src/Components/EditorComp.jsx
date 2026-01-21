@@ -4,9 +4,7 @@ import socket from "../socket/socket";
 import { useLocation, useParams } from "react-router-dom";
 import "../styles/Editor.css";
 
-const EditorComp = () => {
-  const languages = ["javascript", "typescript", "java", "python"];
-
+const EditorComp = ({ code, language, onCodeChange }) => {
   const codeTemplates = {
     javascript: "console.log('Hello World');",
     typescript:
@@ -14,6 +12,11 @@ const EditorComp = () => {
     java:
       "public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello World\");\n  }\n}",
     python: "print('Hello World')",
+    cpp: "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n  cout << \"Hello World\";\n  return 0;\n}",
+    c: "#include <stdio.h>\n\nint main(){\n  printf(\"Hello World\");\n  return 0;\n}",
+    html: "<!DOCTYPE html>\n<html>\n<head>\n  <title>Hello</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>",
+    css: "body {\n  font-family: Arial;\n}\n",
+    json: "{\n  \"message\": \"Hello World\"\n}",
   };
 
   const { roomId } = useParams();
@@ -21,86 +24,53 @@ const EditorComp = () => {
   const userName = state?.userName;
 
   const [loading, setLoading] = useState(false);
-  const [language, setLanguage] = useState("javascript");
-  const [code, setCode] = useState(codeTemplates.javascript);
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("");
-
-  // ✅ NEW: STDIN INPUT STATE
   const [input, setInput] = useState("");
 
-  // -------------------------
-  // JOIN ROOM
-  // -------------------------
+  const [localLang, setLocalLang] = useState(language || "javascript");
+  const [localCode, setLocalCode] = useState(
+    code || codeTemplates[language] || codeTemplates["javascript"]
+  );
+
+  // Sync with parent when file changes
   useEffect(() => {
-    if (!roomId || !userName) return;
-    socket.emit("join-room", { roomId, userName });
-  }, [roomId, userName]);
+    setLocalLang(language || "javascript");
+    setLocalCode(code || codeTemplates[language] || codeTemplates["javascript"]);
+  }, [code, language]);
 
-  // -------------------------
-  // RECEIVE CODE FROM SOCKET
-  // -------------------------
-  useEffect(() => {
-    socket.on("code-sent", ({ code, language }) => {
-      setLanguage(language);
-      setCode(code);
-    });
-
-    return () => {
-      socket.off("code-sent");
-    };
-  }, []);
-
-  // -------------------------
-  // CODE CHANGE (USER TYPING)
-  // -------------------------
+  // Code change
   const handleChange = (value) => {
     if (value === undefined) return;
 
-    setCode(value);
+    setLocalCode(value);
+    onCodeChange(value);
 
-    socket.emit("code-change", {
-      roomId,
-      userName,
-      code: value,
-      language,
-    });
+    // ⚠️ REMOVE THIS SOCKET EMIT TO KEEP IT INDEPENDENT
+    // socket.emit("code-change", {
+    //   roomId,
+    //   userName,
+    //   code: value,
+    //   language: localLang,
+    // });
   };
 
-  // -------------------------
-  // LANGUAGE CHANGE
-  // -------------------------
-  const handleLanguageChange = (e) => {
-    const lang = e.target.value;
-    const template = codeTemplates[lang];
-
-    setLanguage(lang);
-    setCode(template);
-
-    socket.emit("code-change", {
-      roomId,
-      userName,
-      code: template,
-      language: lang,
-    });
-  };
-
-  // -------------------------
-  // RUN CODE (WITH INPUT)
-  // -------------------------
+  // Run code
   const handleRun = async () => {
     try {
       setLoading(true);
-
-      const response = await fetch("https://code-collab-server.vkstore.site/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language,
-          code,
-          input, // ✅ SEND INPUT
-        }),
-      });
+      const response = await fetch(
+        "https://code-collab-server.vkstore.site/run",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            language: localLang,
+            code: localCode,
+            input,
+          }),
+        }
+      );
 
       const data = await response.json();
       setStatus(data.status);
@@ -127,17 +97,7 @@ const EditorComp = () => {
 
       {/* TOOLBAR */}
       <div className="editor-toolbar">
-        <select
-          className="language-select"
-          value={language}
-          onChange={handleLanguageChange}
-        >
-          {languages.map((lang) => (
-            <option key={lang} value={lang}>
-              {lang.toUpperCase()}
-            </option>
-          ))}
-        </select>
+        <span className="language-badge">{localLang.toUpperCase()}</span>
 
         {!loading ? (
           <button className="run-btn" onClick={handleRun}>
@@ -150,13 +110,12 @@ const EditorComp = () => {
 
       {/* MAIN */}
       <div className="editor-main">
-        {/* EDITOR */}
         <div className="editor-wrapper">
           <Editor
             height="100%"
             theme="vs-dark"
-            language={language}
-            value={code}
+            language={localLang}
+            value={localCode}
             onChange={handleChange}
             options={{
               minimap: { enabled: false },
@@ -169,9 +128,8 @@ const EditorComp = () => {
           />
         </div>
 
-        {/* RIGHT PANEL */}
+        {/* Output panel */}
         <div className="output-wrapper">
-          {/* INPUT */}
           <div className="output-header">Input (STDIN)</div>
           <textarea
             className="input-box"
@@ -180,15 +138,12 @@ const EditorComp = () => {
             onChange={(e) => setInput(e.target.value)}
           />
 
-          {/* OUTPUT */}
           <div className="output-header">
             Output
             {status && (
               <span
                 className={
-                  status === "success"
-                    ? "output-success"
-                    : "output-error"
+                  status === "success" ? "output-success" : "output-error"
                 }
               >
                 {status}

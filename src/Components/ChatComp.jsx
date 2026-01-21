@@ -4,11 +4,11 @@ import "../styles/Chat.css";
 import socket from "../socket/socket";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-const ChatComp = () => {
+const ChatComp = ({roomId,userName,chatOpen,setUsersFromParent,onNewMessage}) => {
   const navigate = useNavigate();
-  const {roomId}=useParams()
-  const{state}=useLocation()
-  const userName=state?.userName
+  // const {roomId}=useParams()
+  // const{state}=useLocation()
+  // const userName=state?.userName
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState([]);
   const[chatUsers,setChatUsers]=useState([])
@@ -35,6 +35,7 @@ const ChatComp = () => {
   useEffect(() => {
     socket.on("room-users", (data) => {
       setUsers(data);
+      setUsersFromParent(data)
       setChatUsers(data)
      
     });
@@ -46,6 +47,9 @@ const ChatComp = () => {
 
     socket.on("new-message", (msg) => {
       setChats((prev) => [...prev, msg]);
+      if(!chatOpen&&msg.userName!==userName){
+       onNewMessage?.()
+      }
     });
 
     return () => {
@@ -53,7 +57,7 @@ const ChatComp = () => {
       socket.off("receive-message");
       socket.off("new-message");
     };
-  }, []);
+  }, [chatOpen, userName, onNewMessage]);
 
   // -------------------------
   // AUTO SCROLL

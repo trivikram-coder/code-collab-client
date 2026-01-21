@@ -1,105 +1,104 @@
 .chat-container {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: #0f172a;
+  background: #020617;
   color: #e5e7eb;
-  font-family: "Inter", sans-serif;
 }
 
-/* Header */
+/* HEADER */
 .chat-header {
-  padding: 15px 20px;
+  padding: 12px 16px;
   background: #020617;
+  border-bottom: 1px solid #1e293b;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #1e293b;
 }
 
 .chat-header h3 {
+  font-size: 15px;
   margin: 0;
-  font-size: 18px;
 }
 
-.online-status {
-  color: #22c55e;
-  font-size: 14px;
+.chat-header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-/* Messages */
+.leave-btn {
+  background: #ef4444;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+}
+
+/* USERS */
+.users-list {
+  padding: 10px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.user-item {
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+/* MESSAGES */
 .chat-messages {
   flex: 1;
-  padding: 20px;
+  padding: 12px;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
-/* Message bubble */
 .message {
-  max-width: 60%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 14px;
+  margin-bottom: 10px;
+  max-width: 80%;
+}
+
+.sent {
+  align-self: flex-end;
+  background: #2563eb;
+  padding: 8px 12px;
+  border-radius: 12px 12px 0 12px;
+}
+
+.received {
+  background: #1e293b;
+  padding: 8px 12px;
+  border-radius: 12px 12px 12px 0;
 }
 
 .message .user {
-  display: block;
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.7;
-  margin-bottom: 4px;
 }
 
-/* Received */
-.received {
-  background: #1e293b;
-  align-self: flex-start;
-}
-
-/* Sent */
-.sent {
-  background: #2563eb;
-  align-self: flex-end;
-}
-
-/* Input */
+/* INPUT */
 .chat-input {
-  padding: 15px;
+  padding: 10px;
   display: flex;
-  gap: 10px;
-  background: #020617;
+  gap: 8px;
   border-top: 1px solid #1e293b;
 }
 
 .chat-input input {
   flex: 1;
-  padding: 10px 12px;
-  border-radius: 6px;
-  border: none;
-  outline: none;
   background: #020617;
-  color: #e5e7eb;
   border: 1px solid #1e293b;
+  color: white;
+  padding: 8px;
+  border-radius: 6px;
 }
 
 .chat-input button {
-  padding: 10px 18px;
-  border-radius: 6px;
+  background: #22c55e;
   border: none;
-  background: #2563eb;
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.chat-input button:hover {
-  background: #1d4ed8;
-}
-.show-user{
-  color: white;
-  font-family: 'Times New Roman', Times, serif;
-  font-weight: bold;
-  font-size: 20px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: black;
+  font-weight: 600;
 }

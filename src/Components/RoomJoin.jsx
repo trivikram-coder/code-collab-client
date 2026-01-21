@@ -12,7 +12,7 @@ const RoomJoin = () => {
         className="card p-4 shadow"
         onSubmit={(e) => {
           e.preventDefault();
-          navigate(`/chat/${roomId}`, { state: { userName } });
+          navigate(`/editor/${roomId}`, { state: { userName } });
         }}
       >
         <h4 className="mb-3 text-center">Join Room</h4>

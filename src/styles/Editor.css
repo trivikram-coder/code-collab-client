@@ -1,113 +1,85 @@
-/* PAGE */
 .editor-page {
-  height: 100vh;
-  background: #1e1e1e;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  color: #e0e0e0;
-  font-family: "Segoe UI", sans-serif;
+  background: #020617;
 }
 
 /* HEADER */
 .editor-header {
-  height: 48px;
-  background: #252526;
+  padding: 10px 16px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0 16px;
-  border-bottom: 1px solid #333;
-  font-size: 14px;
-}
-
-.editor-header .left span {
-  margin-right: 16px;
-}
-
-.status-online {
-  color: #4caf50;
+  color: #e5e7eb;
+  font-size: 13px;
 }
 
 /* TOOLBAR */
 .editor-toolbar {
-  height: 44px;
-  background: #2d2d2d;
+  padding: 8px 16px;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  border-bottom: 1px solid #333;
+  gap: 10px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
 }
 
 .language-select {
-  background: #1e1e1e;
+  background: #020617;
+  border: 1px solid #1e293b;
   color: white;
-  border: 1px solid #555;
-  padding: 6px 10px;
-  border-radius: 4px;
-  outline: none;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 .run-btn {
-  background: #0e639c;
-  color: white;
+  background: #22c55e;
   border: none;
   padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
 }
 
-.run-btn:hover {
-  background: #1177bb;
-}
-
-/* MAIN LAYOUT */
+/* MAIN */
 .editor-main {
   flex: 1;
   display: flex;
-  overflow: hidden;
 }
 
-/* EDITOR */
 .editor-wrapper {
   flex: 2;
-  border-right: 1px solid #333;
 }
 
-/* OUTPUT */
 .output-wrapper {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #1b1b1b;
+  border-left: 1px solid #1e293b;
+  padding: 10px;
+  background: #020617;
 }
 
 .output-header {
-  height: 36px;
-  padding: 0 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #252526;
-  border-bottom: 1px solid #333;
   font-size: 13px;
+  margin-bottom: 6px;
+  color: #94a3b8;
 }
 
-.output-success {
-  color: #4caf50;
-}
-
-.output-error {
-  color: #f44336;
+.input-box {
+  width: 100%;
+  height: 80px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: white;
+  padding: 6px;
+  border-radius: 6px;
+  margin-bottom: 10px;
 }
 
 .output-box {
-  flex: 1;
-  padding: 12px;
-  background: #1e1e1e;
-  color: #d4d4d4;
-  font-family: monospace;
-  font-size: 13px;
-  white-space: pre-wrap;
+  background: black;
+  color: #22c55e;
+  padding: 10px;
+  height: 150px;
   overflow-y: auto;
+  border-radius: 6px;
 }

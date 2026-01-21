@@ -1,0 +1,115 @@
+.editor-main-wrapper {
+  background: #0f172a;
+}
+
+.editor-section {
+  border-right: 1px solid #1e293b;
+  background: #020617;
+}
+
+.chat-section {
+  background: #020617;
+}
+
+
+.chat-float-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  z-index: 1050;
+}
+
+.chat-float-btn:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
+}
+
+/* MODAL STYLE */
+.chat-modal .modal-content {
+  height: 85vh;
+  background: #020617;
+  color: white;
+}
+
+.chat-modal .modal-header {
+  border-bottom: 1px solid #1e293b;
+}
+
+.chat-modal .modal-body {
+  height: 100%;
+}
+.chat-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+.file-sidebar {
+  background: #020617;
+  border-right: 1px solid #1e293b;
+  color: white;
+  height: 100%;
+}
+
+.file-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.file-header button {
+  background: none;
+  border: none;
+  color: #22c55e;
+  font-size: 18px;
+}
+
+.file-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.file-item.active {
+  background: #1e293b;
+}
+.delete-icon {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.delete-icon:hover {
+  opacity: 1;
+  color: #ef4444; /* red */
+}
+.no-file {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  margin: 20px;
+  padding: 20px;
+  border: 1px dashed #444;
+}
