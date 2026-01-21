@@ -5,7 +5,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/Editor.css";
 import UsersList from "./UsersList";
 
-const EditorComp = ({ code, language, onCodeChange }) => {
+const EditorComp = ({ fileId,code, language, onCodeChange }) => {
   const navigate=useNavigate()
   const codeTemplates = {
     javascript: "console.log('Hello World');",
@@ -134,6 +134,7 @@ const leaveRoom = () => {
       <div className="editor-main">
         <div className="editor-wrapper">
           <Editor
+          key={fileId}
             height="100%"
             theme="vs-dark"
             language={localLang}
