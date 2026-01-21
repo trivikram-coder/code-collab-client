@@ -34,7 +34,7 @@ const ChatComp = ({roomId,userName,chatOpen,chatUsers,onNewMessage}) => {
   // -------------------------
   useEffect(() => {
     socket.on("room-users", (data) => {
-      setUsers(data);
+      
       setUsersFromParent(data)
       setChatUsers(data)
      

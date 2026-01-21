@@ -195,6 +195,7 @@ useEffect(() => {
 
  useEffect(() => {
   const handleRoomUsers = (data) => {
+    console.log(data)
     setUsers(data);
   };
 
