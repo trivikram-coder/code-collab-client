@@ -22,7 +22,7 @@ const EditorMain = () => {
   const { roomId } = useParams();
   const { state } = useLocation();
   const userName = state?.userName;
-
+  console.log(roomId,userName)
   /* ---------------- FILE STATE ---------------- */
   const [files, setFiles] = useState([]); // ALWAYS array
   const [activeFileId, setActiveFileId] = useState(null);
@@ -351,6 +351,7 @@ useEffect(() => {
                     onClick={() => setShowChat(false)}
                   ></button>
                 </div>
+                {console.log(users)}
                 <div className="modal-body p-0">
                   <ChatComp
                     roomId={roomId}

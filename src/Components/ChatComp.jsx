@@ -4,15 +4,15 @@ import "../styles/Chat.css";
 import socket from "../socket/socket";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-const ChatComp = ({roomId,userName,chatOpen,setUsersFromParent,onNewMessage}) => {
+const ChatComp = ({roomId,userName,chatOpen,chatUsers,onNewMessage}) => {
   const navigate = useNavigate();
   // const {roomId}=useParams()
   // const{state}=useLocation()
   // const userName=state?.userName
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState([]);
-  const[chatUsers,setChatUsers]=useState([])
-  const [users, setUsers] = useState([]);
+  // const[chatUsers,setChatUsers]=useState([])
+  // const [users, setUsers] = useState([]);
 
   const chatEndRef = useRef(null);
 
