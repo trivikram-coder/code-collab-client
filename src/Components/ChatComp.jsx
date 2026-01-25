@@ -4,11 +4,12 @@ import "../styles/Chat.css";
 import socket from "../socket/socket";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-const ChatComp = ({roomId,userName,chatOpen,chatUsers,onNewMessage}) => {
+const ChatComp = ({roomId,userName,roomName,chatOpen,chatUsers,onNewMessage}) => {
   const navigate = useNavigate();
   // const {roomId}=useParams()
   // const{state}=useLocation()
   // const userName=state?.userName
+  console.log(`Chat users :${chatUsers} ${userName}`)
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState([]);
   // const[chatUsers,setChatUsers]=useState([])
@@ -22,7 +23,7 @@ const ChatComp = ({roomId,userName,chatOpen,chatUsers,onNewMessage}) => {
   useEffect(() => {
     if (!roomId || !userName) return;
 
-    socket.emit("join-room", { roomId, userName });
+    socket.emit("join-room", { roomId,roomName, userName });
 
     return () => {
       socket.emit("leave-room", { roomId, userName });
@@ -33,15 +34,10 @@ const ChatComp = ({roomId,userName,chatOpen,chatUsers,onNewMessage}) => {
   // SOCKET LISTENERS
   // -------------------------
   useEffect(() => {
-    socket.on("room-users", (data) => {
-      
-      setUsersFromParent(data)
-      setChatUsers(data)
-     
-    });
+    
 
     socket.on("receive-message", (data) => {
- 
+      console.log("Room chats",data)
       setChats(data.chats || []);
     });
 
@@ -81,25 +77,17 @@ const ChatComp = ({roomId,userName,chatOpen,chatUsers,onNewMessage}) => {
     setMessage("");
   };
 
-  // -------------------------
-  // LEAVE ROOM
-  // -------------------------
-  const leaveRoomHandler = () => {
-    socket.emit("leave-room", { roomId, userName });
-    navigate("/");
-  };
+
 
   return (
     <div className="chat-container">
       {/* HEADER */}
       <div className="chat-header">
-        <h3>Room: {roomId}</h3>
+        <h3>Room: {roomName}</h3>
         <div className="chat-header-right">
           <span className="show-user">{userName}</span>
           <span className="online-status">● Online</span>
-          <button className="leave-btn" onClick={leaveRoomHandler}>
-            Leave
-          </button>
+          
         </div>
       </div>
 
@@ -119,11 +107,11 @@ const ChatComp = ({roomId,userName,chatOpen,chatUsers,onNewMessage}) => {
           <div
             key={index}
             className={`message ${
-              chat.userName === userName ? "sent" : "received"
+              chat.user === userName ? "sent" : "received"
             }`}
           >
             <span className="user">
-              {chat.userName === userName ? "You" : chat.userName}
+              {chat.user === userName ? "You" : chat.user}
             </span>
             <p>{chat.message}</p>
           </div>

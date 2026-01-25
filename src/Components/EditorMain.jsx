@@ -5,7 +5,7 @@ import "../styles/EditorMain.css";
 import { useLocation, useParams } from "react-router-dom";
 import { Trash } from "lucide-react";
 import socket from "../socket/socket";
-import UsersList from "./UsersList";
+
 
 /*
   FILE STRUCTURE:
@@ -22,6 +22,8 @@ const EditorMain = () => {
   const { roomId } = useParams();
   const { state } = useLocation();
   const userName = state?.userName;
+  const roomName=state?.roomName ||localStorage.getItem(`room:${roomId}`)
+
   console.log(roomId,userName)
   /* ---------------- FILE STATE ---------------- */
   const [files, setFiles] = useState([]); // ALWAYS array
@@ -177,7 +179,7 @@ useEffect(() => {
   if (!roomId || !userName) return;
 
   const joinRoom = () => {
-    socket.emit("join-room", { roomId, userName });
+    socket.emit("join-room", { roomId,roomName, userName });
   };
 
   // Join on first load
@@ -356,6 +358,7 @@ useEffect(() => {
                 <div className="modal-body p-0">
                   <ChatComp
                     roomId={roomId}
+                    roomName={roomName}
                     userName={userName}
                     chatOpen={showChat}
                     chatUsers={users}

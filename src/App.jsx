@@ -1,15 +1,17 @@
 import { BrowserRouter,Routes,Route } from "react-router-dom"
-import RoomJoin from "./Components/RoomJoin"
+import RoomJoin from "./components/RoomJoin"
 
-import EditorComp from "./Components/EditorComp"
-import ChatComp from "./Components/ChatComp"
-import EditorMain from "./Components/EditorMain"
+import EditorComp from "./components/EditorComp"
+import ChatComp from "./components/ChatComp"
+import EditorMain from "./components/EditorMain"
+import Dashboard from "./components/Dashboard"
+import Test from "./components/Test"
 const App = () => {
   
   return (
     <BrowserRouter>
     <Routes>
-      <Route path="/" element={<RoomJoin/>}/>
+      <Route path="/" element={<Dashboard/>}/>
      
       <Route path="/chat/:roomId" element={<ChatComp/>}/>
       <Route path="/editor/:roomId" element={<EditorMain/>}/>

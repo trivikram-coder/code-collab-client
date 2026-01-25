@@ -24,6 +24,7 @@ const EditorComp = ({ fileId,code, language, onCodeChange }) => {
   const { roomId } = useParams();
   const { state } = useLocation();
   const userName = state?.userName;
+  const roomName=localStorage.getItem(`room:${roomId}`) || ""
 
   const [loading, setLoading] = useState(false);
   const [output, setOutput] = useState("");
@@ -37,7 +38,7 @@ const EditorComp = ({ fileId,code, language, onCodeChange }) => {
   useEffect(() => {
   if (!roomId || !userName) return;
 
-  socket.emit("join-room", { roomId, userName });
+  socket.emit("join-room", { roomId,roomName, userName });
 
   const handleRoomUsers = (data) => {
     setUsers(data);
@@ -100,14 +101,13 @@ const leaveRoom = () => {
       setLoading(false);
     }
   };
-
   return (
     <div className="editor-page">
       {/* HEADER */}
       <div className="editor-header">
         <div className="left">
           <span className="user">👤 {userName}</span>
-          <span className="room">Room: {roomId}</span>
+          <span className="room">Room: {roomName}</span>
         </div>
         <div className="right">
           <span className="status-online">🟢 Online</span>
