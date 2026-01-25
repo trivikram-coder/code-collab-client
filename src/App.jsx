@@ -1,5 +1,4 @@
 import { BrowserRouter,Routes,Route } from "react-router-dom"
-import RoomJoin from "./components/RoomJoin"
 
 import EditorComp from "./components/EditorComp"
 import ChatComp from "./components/ChatComp"
