@@ -23,7 +23,7 @@ const Auth = () => {
 
   /* ================= LOGIN ================= */
   const login = async () => {
-    const res = await axios.post("http://localhost:3030/auth/login", {
+    const res = await axios.post("https://code-collab-server.vkstore.site/auth/login", {
       email: form.email,
       password: form.password,
     });
@@ -48,7 +48,7 @@ const Auth = () => {
   };
 
   const completeRegister = async () => {
-    await axios.post("http://localhost:3030/auth/register", {
+    await axios.post("https://code-collab-server.vkstore.site/auth/register", {
       userName: form.userName,
       mobileNumber: form.mobileNumber,
       email: form.email,
