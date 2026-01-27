@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import api from "../api/api";
 import emailApi from "../api/emailApi";
 
@@ -18,9 +19,10 @@ const Otp = ({ form, onChange, otpFor, setMode }) => {
 
       // register flow
       await api.post("/auth/register", form);
+      toast.success("Registered successfully")
       setMode("login");
     } catch (error) {
-      alert(
+      toast.info(
         error.response?.data?.message || "Invalid OTP"
       );
     }

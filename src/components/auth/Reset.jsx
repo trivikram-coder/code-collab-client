@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../api/api";
+import { toast } from "react-toastify";
 
 const Reset = ({ form, onChange, setMode }) => {
   const [show, setShow] = useState(false);
@@ -8,7 +9,7 @@ const Reset = ({ form, onChange, setMode }) => {
 
   const reset = async () => {
     if (form.newPassword !== confirm) {
-      alert("Passwords do not match");
+      toast.info("Passwords do not match");
       return;
     }
 
@@ -22,7 +23,7 @@ const Reset = ({ form, onChange, setMode }) => {
       localStorage.removeItem("resetToken");
       setMode("login");
     } catch (error) {
-      alert(
+      toast.info(
         error.response?.data?.message || "Password reset failed"
       );
     } finally {

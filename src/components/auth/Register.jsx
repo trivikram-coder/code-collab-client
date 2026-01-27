@@ -1,27 +1,36 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import api from "../api/api";
+import emailApi from "../api/emailApi";
+import { toast } from "react-toastify";
 
-const Login = ({ form, onChange, setMode }) => {
-  const [loading, setLoading] = useState(false);
+const Register = ({ form, onChange, setMode, setOtpFor }) => {
   const [showPass, setShowPass] = useState(false);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const login = async () => {
+  const sendOtp = async (e) => {
+    e.preventDefault();
+
     try {
       setLoading(true);
 
-      const res = await api.post("/auth/login", {
+      // 200 = exists → block
+      await api.get(`/auth/users/check-email/${form.email}`);
+      toast.info("Email already registered");
+    } catch (error) {
+      // 404 = not registered → proceed
+      if (error.response?.status !== 404) {
+        toast.error("Unable to verify email");
+        return;
+      }
+
+      await emailApi.post("/otp/send-otp", {
         email: form.email,
-        password: form.password,
+        appName: "Code Collab",
+        type: "register",
       });
 
-      localStorage.setItem("token", res.data.token);
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      alert(
-        error.response?.data?.message || "Invalid credentials"
-      );
+      setOtpFor("register");
+      setMode("otp");
     } finally {
       setLoading(false);
     }
@@ -29,52 +38,39 @@ const Login = ({ form, onChange, setMode }) => {
 
   return (
     <>
-      <h5 className="mb-3">Login</h5>
+      <h5 className="mb-3">Create account</h5>
 
-      <input
-        className="form-control mb-3"
-        name="email"
-        placeholder="Email"
-        onChange={onChange}
-        required
-      />
+      <form onSubmit={sendOtp}>
+        <input className="form-control mb-3" name="userName" placeholder="Full name" onChange={onChange} required />
+        <input className="form-control mb-3" name="mobileNumber" placeholder="Mobile number" onChange={onChange} required />
+        <input className="form-control mb-3" name="email" placeholder="Email address" onChange={onChange} required />
 
-      <div className="input-group mb-3">
-        <input
-          className="form-control"
-          name="password"
-          type={showPass ? "text" : "password"}
-          placeholder="Password"
-          onChange={onChange}
-          required
-        />
-        <span
-          className="input-group-text"
-          role="button"
-          onClick={() => setShowPass(!showPass)}
-        >
-          <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`} />
+        <div className="input-group mb-3">
+          <input
+            className="form-control"
+            name="password"
+            type={showPass ? "text" : "password"}
+            placeholder="Password"
+            onChange={onChange}
+            required
+          />
+          <span className="input-group-text" role="button" onClick={() => setShowPass(!showPass)}>
+            <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`} />
+          </span>
+        </div>
+
+        <button className="btn btn-primary w-100 mb-3" type="submit" disabled={loading}>
+          {loading ? "Sending OTP..." : "Continue"}
+        </button>
+      </form>
+
+      <div className="text-center">
+        <span role="button" className="text-muted small" onClick={() => setMode("login")}>
+          ← Back to login
         </span>
-      </div>
-
-      <button
-        className="btn btn-primary w-100 mb-2"
-        disabled={loading}
-        onClick={login}
-      >
-        {loading ? "Logging in..." : "Login"}
-      </button>
-
-      <div className="d-flex justify-content-between">
-        <small role="button" onClick={() => setMode("register")}>
-          Create account
-        </small>
-        <small role="button" onClick={() => setMode("forgot")}>
-          Forgot?
-        </small>
       </div>
     </>
   );
 };
 
-export default Login;
+export default Register;
