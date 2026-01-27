@@ -77,30 +77,7 @@ const logout = () => {
 
   return (
     <>
-    {!storedUser?(
-      <div
-    className="d-flex justify-content-center align-items-center"
-    style={{ minHeight: "100vh", background: "#f8f9fa" }}
-  >
-    <div
-      className="card shadow-sm border-0 p-4 text-center"
-      style={{ maxWidth: "420px", width: "100%" }}
-    >
-      <h4 className="mb-2 text-danger">Authentication Required</h4>
-
-      <p className="text-muted mb-4">
-        You must be logged in to access the dashboard.
-      </p>
-
-      <button
-        className="btn btn-primary w-100"
-        onClick={() => navigate("/")}
-      >
-        Go to Login
-      </button>
-    </div>
-  </div>
-    ):(
+    
       <div className="container-fluid">
       <div className="row vh-100">
 
@@ -270,9 +247,7 @@ const logout = () => {
         </>
       )}
     </div>
-    )
-  
-  }
+    
     
     </>
   );

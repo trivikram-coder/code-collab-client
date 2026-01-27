@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import EditorComp from "./EditorComp";
 import ChatComp from "./ChatComp";
 import "../styles/EditorMain.css";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Trash } from "lucide-react";
 import socket from "../socket/socket";
 
@@ -19,6 +19,7 @@ import socket from "../socket/socket";
 */
 
 const EditorMain = () => {
+  const navigate=useNavigate()
   const { roomId } = useParams();
   const { state } = useLocation();
   const userName = state?.userName;
@@ -274,7 +275,25 @@ useEffect(() => {
 
   /* ---------------- RENDER ---------------- */
   return (
-    <div className="container-fluid editor-main-wrapper">
+    <>
+    {
+      (!userName || !roomId)?(
+       <div className="d-flex justify-content-center align-items-center vh-100">
+  <div className="card shadow p-4 text-center" style={{ maxWidth: "400px" }}>
+    <p className="fs-5 mb-4 text-danger">
+      Please enter a valid room
+    </p>
+    <button
+      className="btn btn-primary w-100"
+      onClick={() => navigate("/dashboard")}
+    >
+      Join Room
+    </button>
+  </div>
+</div>
+
+      ):(
+ <div className="container-fluid editor-main-wrapper">
       <div className="row vh-100">
         {/* FILE EXPLORER */}
         <div className="col-2 p-0 file-sidebar">
@@ -374,6 +393,10 @@ useEffect(() => {
         </>
       )}
     </div>
+      )
+    }
+   
+    </>
   );
 };
 
