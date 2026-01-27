@@ -3,12 +3,19 @@ import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const storedUser = JSON.parse(localStorage.getItem("user"));
 
-  // 🔐 From AUTH later
-  const user = {
-    name: "Vikram",
-    email: "vikram@saas.com",
-  };
+const user = {
+  name: storedUser?.userName,
+  email: storedUser?.email,
+};
+
+const logout = () => {
+  localStorage.removeItem("user");
+  localStorage.removeItem('token')
+  navigate("/");
+};
+
 
   const recentRooms = [
     { id: "react101", lastUsed: "2 hrs ago" },
@@ -69,7 +76,32 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="container-fluid">
+    <>
+    {!storedUser?(
+      <div
+    className="d-flex justify-content-center align-items-center"
+    style={{ minHeight: "100vh", background: "#f8f9fa" }}
+  >
+    <div
+      className="card shadow-sm border-0 p-4 text-center"
+      style={{ maxWidth: "420px", width: "100%" }}
+    >
+      <h4 className="mb-2 text-danger">Authentication Required</h4>
+
+      <p className="text-muted mb-4">
+        You must be logged in to access the dashboard.
+      </p>
+
+      <button
+        className="btn btn-primary w-100"
+        onClick={() => navigate("/")}
+      >
+        Go to Login
+      </button>
+    </div>
+  </div>
+    ):(
+      <div className="container-fluid">
       <div className="row vh-100">
 
         {/* SIDEBAR */}
@@ -79,7 +111,7 @@ const Dashboard = () => {
             <li className="nav-item fw-semibold">Dashboard</li>
             <li className="nav-item text-muted">Rooms</li>
             <li className="nav-item text-muted">Profile</li>
-            <li className="nav-item text-danger mt-4">Logout</li>
+            <li className="nav-item text-danger mt-4" onClick={logout}>Logout</li>
           </ul>
         </div>
 
@@ -238,6 +270,11 @@ const Dashboard = () => {
         </>
       )}
     </div>
+    )
+  
+  }
+    
+    </>
   );
 };
 
