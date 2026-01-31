@@ -27,8 +27,8 @@ const App = () => (
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<Account />} />
-            <Route path="/editor/:roomId" element={<EditorMain />} />
           </Route>
+            <Route path="/editor/:roomId" element={<EditorMain />} />
         </Route>
       </Routes>
     </Suspense>
