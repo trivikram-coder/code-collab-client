@@ -21,6 +21,7 @@ const Reset = ({ form, onChange, setMode }) => {
       });
 
       localStorage.removeItem("resetToken");
+      toast.success("Password updated successfully")
       setMode("login");
     } catch (error) {
       toast.info(

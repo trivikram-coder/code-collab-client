@@ -28,7 +28,7 @@ const Register = ({ form, onChange, setMode, setOtpFor }) => {
         appName: "Code Collab",
         type: "register",
       });
-
+      toast.success( `OTP Sent successfully to your ${form.email}`)
       setOtpFor("register");
       setMode("otp");
     } finally {

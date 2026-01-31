@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../api/api";
 import emailApi from "../api/emailApi";
+import { toast } from "react-toastify";
 
 const Forgot = ({ form, onChange, setMode, setOtpFor }) => {
   const [loading, setLoading] = useState(false);
@@ -12,17 +13,21 @@ const Forgot = ({ form, onChange, setMode, setOtpFor }) => {
       setLoading(true);
 
       // 1️⃣ Check if email exists (200 = exists, 404 = not exists)
-      await api.get(`/auth/users/check-email/${form.email}`);
+      const existsEmail=await api.get(`/auth/users/check-email/${form.email}`);
+      if(existsEmail.status===200){
 
+        const sendOtp=await emailApi.post("/otp/send-otp", {
+          email: form.email,
+          appName: "Code Collab",
+          type: "forget",
+        });
+        toast.success(`OTP Sent to your ${form.email}`)
+        setOtpFor("forgot");
+        setMode("otp");
+
+      }
       // 2️⃣ Send OTP
-      await emailApi.post("/otp/send-otp", {
-        email: form.email,
-        appName: "Code Collab",
-        type: "forget",
-      });
 
-      setOtpFor("forgot");
-      setMode("otp");
     } catch (error) {
       if (error.response?.status === 404) {
         alert("Email not registered");
