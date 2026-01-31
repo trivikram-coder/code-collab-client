@@ -186,20 +186,54 @@ const leaveRoom = () => {
     <UsersList users={users} userName={userName}/>
   </div>
       </div>
-      <Modal show={leaveRoomAlertBox} centered onHide={() => setLeaveRoomAlertBox(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Leave Room</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Are you sure you want to leave the room?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setLeaveRoomAlertBox(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={leaveRoom}>
-            Leave
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {leaveRoomAlertBox && (
+  <>
+    <div className="modal fade show d-block" tabIndex="-1">
+      <div className="modal-dialog modal-dialog-centered">
+        <div
+          className="modal-content border-0 shadow-sm rounded-4"
+          style={{ backgroundColor: "#2c2c2c", color: "#fff" }}
+        >
+          <div className="modal-header border-0">
+            <h5 className="modal-title">Confirm Leave Room</h5>
+            <button
+              type="button"
+              className="btn-close btn-close-white"
+              onClick={() => setLeaveRoomAlertBox(false)}
+            ></button>
+          </div>
+
+          <div className="modal-body">
+            Are you sure you want to leave the room?
+          </div>
+
+          <div className="modal-footer border-0">
+            <button
+              className="btn btn-secondary rounded-3"
+              onClick={() => setLeaveRoomAlertBox(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-danger rounded-3"
+              onClick={leaveRoom}
+            >
+              Leave
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Backdrop */}
+    <div
+      className="modal-backdrop fade show"
+      style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+    ></div>
+  </>
+)}
+
+
     </div>
   );
 };
