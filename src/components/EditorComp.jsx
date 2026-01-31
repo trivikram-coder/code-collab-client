@@ -4,6 +4,9 @@ import socket from "../socket/socket";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/Editor.css";
 import UsersList from "./UsersList";
+import { toast } from "react-toastify";
+import { Button, Modal } from "react-bootstrap";
+
 
 const EditorComp = ({ fileId,code, language, onCodeChange }) => {
   const navigate=useNavigate()
@@ -20,7 +23,7 @@ const EditorComp = ({ fileId,code, language, onCodeChange }) => {
     css: "body {\n  font-family: Arial;\n}\n",
     json: "{\n  \"message\": \"Hello World\"\n}",
   };
-
+  const[leaveRoomAlertBox,setLeaveRoomAlertBox]=useState(false)
   const { roomId } = useParams();
   const { state } = useLocation();
   const userName = state?.userName;
@@ -56,6 +59,7 @@ const EditorComp = ({ fileId,code, language, onCodeChange }) => {
     setLocalCode(code || codeTemplates[language] || codeTemplates["javascript"]);
   }, [code, language]);
 const leaveRoom = () => {
+  toast.info(`${userName} left the room ${roomName}`)
     socket.emit("leave-room", { roomId, userName });
     navigate("/");
   };
@@ -111,7 +115,7 @@ const leaveRoom = () => {
         </div>
         <div className="right">
           <span className="status-online">🟢 Online</span>
-          <button className="leave-btn" onClick={leaveRoom}>
+          <button className="leave-btn" onClick={()=>setLeaveRoomAlertBox(true)}>
             Leave Room
           </button>
         </div>
@@ -182,7 +186,20 @@ const leaveRoom = () => {
     <UsersList users={users} userName={userName}/>
   </div>
       </div>
-      
+      <Modal show={leaveRoomAlertBox} centered onHide={() => setLeaveRoomAlertBox(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Leave Room</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to leave the room?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setLeaveRoomAlertBox(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={leaveRoom}>
+            Leave
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
