@@ -23,7 +23,7 @@ const EditorMain = () => {
   const { roomId } = useParams();
   const { state } = useLocation();
   const userName = state?.userName;
-  const roomName=state?.roomName ||localStorage.getItem(`room:${roomId}`)
+  const [roomName,setRoomName]=useState(state?.roomName ||"")
 
   console.log(roomId,userName)
   /* ---------------- FILE STATE ---------------- */
@@ -179,21 +179,28 @@ useEffect(() => {
 useEffect(() => {
   if (!roomId || !userName) return;
 
-  const joinRoom = () => {
-    socket.emit("join-room", { roomId,roomName, userName });
+  const handleRoomName = ({ roomName }) => {
+    console.log("Room name received:", roomName);
+    setRoomName(roomName)
   };
 
-  // Join on first load
-  joinRoom();
+  socket.on("room-name", handleRoomName);
 
-  // Rejoin on reconnect
-  socket.on("connect", () => {
+  const joinRoom = () => {
+    socket.emit("join-room", { roomId, roomName, userName });
+  };
+
+  if (socket.connected) {
     joinRoom();
-  });
+  }
+
+  socket.on("connect", joinRoom);
 
   return () => {
-    socket.off("connect");
+    socket.off("room-name", handleRoomName);
+    socket.off("connect", joinRoom);
   };
+
 }, [roomId, userName]);
 
  useEffect(() => {
@@ -337,6 +344,7 @@ useEffect(() => {
             <EditorComp
             key={activeFileId}
             fileId={activeFileId}
+            roomName={roomName}
               code={activeFile.content}
               language={activeFile.language}
               onCodeChange={updateFileContent}

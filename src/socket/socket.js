@@ -1,4 +1,4 @@
 import {io} from 'socket.io-client'
-
-const socket=io("https://code-collab-server.vkstore.site")
+import api from '../components/api/api';
+const socket=io(api)
 export default socket;

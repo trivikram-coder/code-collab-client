@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { Button, Modal } from "react-bootstrap";
 
 
-const EditorComp = ({ fileId,code, language, onCodeChange }) => {
+const EditorComp = ({ fileId,roomName,code, language, onCodeChange }) => {
   const navigate=useNavigate()
   const codeTemplates = {
     javascript: "console.log('Hello World');",
@@ -27,7 +27,7 @@ const EditorComp = ({ fileId,code, language, onCodeChange }) => {
   const { roomId } = useParams();
   const { state } = useLocation();
   const userName = state?.userName;
-  const roomName=localStorage.getItem(`room:${roomId}`) || ""
+  
 
   const [loading, setLoading] = useState(false);
   const [output, setOutput] = useState("");
