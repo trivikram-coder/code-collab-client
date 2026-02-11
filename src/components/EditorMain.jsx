@@ -22,7 +22,7 @@ const EditorMain = () => {
   const navigate=useNavigate()
   const { roomId } = useParams();
   const { state } = useLocation();
-  const userName = state?.userName;
+  const [userName,setUserName] = useState(state?.userName||"");
   const [roomName,setRoomName]=useState(state?.roomName ||"")
 
   console.log(roomId,userName)
@@ -179,12 +179,13 @@ useEffect(() => {
 useEffect(() => {
   if (!roomId || !userName) return;
 
-  const handleRoomName = ({ roomName }) => {
-    console.log("Room name received:", roomName);
-    setRoomName(roomName)
+  const handleRoomDetails = (data) => {
+    console.log("Room name received:", data);
+    setUserName(data.userName)
+    setRoomName(data.roomName)
   };
 
-  socket.on("room-name", handleRoomName);
+  socket.on("room-details", handleRoomDetails);
 
   const joinRoom = () => {
     socket.emit("join-room", { roomId, roomName, userName });
@@ -197,11 +198,11 @@ useEffect(() => {
   socket.on("connect", joinRoom);
 
   return () => {
-    socket.off("room-name", handleRoomName);
+    socket.off("room-details", handleRoomDetails);
     socket.off("connect", joinRoom);
   };
 
-}, [roomId, userName]);
+}, [roomId]);
 
  useEffect(() => {
   const handleRoomUsers = (data) => {
@@ -344,7 +345,9 @@ useEffect(() => {
             <EditorComp
             key={activeFileId}
             fileId={activeFileId}
+            roomId={roomId}
             roomName={roomName}
+            userName={userName}
               code={activeFile.content}
               language={activeFile.language}
               onCodeChange={updateFileContent}

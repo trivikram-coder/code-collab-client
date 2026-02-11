@@ -1,4 +1,4 @@
 import {io} from 'socket.io-client'
-import api from '../components/api/api';
-const socket=io(api)
+
+const socket=io("http://localhost:3030")
 export default socket;

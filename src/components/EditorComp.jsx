@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { Button, Modal } from "react-bootstrap";
 
 
-const EditorComp = ({ fileId,roomName,code, language, onCodeChange }) => {
+const EditorComp = ({ fileId,roomId,roomName,userName,code, language, onCodeChange }) => {
   const navigate=useNavigate()
   const codeTemplates = {
     javascript: "console.log('Hello World');",
@@ -24,9 +24,7 @@ const EditorComp = ({ fileId,roomName,code, language, onCodeChange }) => {
     json: "{\n  \"message\": \"Hello World\"\n}",
   };
   const[leaveRoomAlertBox,setLeaveRoomAlertBox]=useState(false)
-  const { roomId } = useParams();
-  const { state } = useLocation();
-  const userName = state?.userName;
+ 
   
 
   const [loading, setLoading] = useState(false);
