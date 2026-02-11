@@ -25,7 +25,7 @@ const EditorMain = () => {
   const [userName,setUserName] = useState(state?.userName||"");
   const [roomName,setRoomName]=useState(state?.roomName ||"")
 
-  console.log(roomId,userName)
+
   /* ---------------- FILE STATE ---------------- */
   const [files, setFiles] = useState([]); // ALWAYS array
   const [activeFileId, setActiveFileId] = useState(null);
@@ -180,7 +180,7 @@ useEffect(() => {
   if (!roomId || !userName) return;
 
   const handleRoomDetails = (data) => {
-    console.log("Room name received:", data);
+    
     setUserName(data.userName)
     setRoomName(data.roomName)
   };
@@ -206,7 +206,7 @@ useEffect(() => {
 
  useEffect(() => {
   const handleRoomUsers = (data) => {
-    console.log(data)
+   
     setUsers(data);
   };
 
@@ -384,7 +384,7 @@ useEffect(() => {
                     onClick={() => setShowChat(false)}
                   ></button>
                 </div>
-                {console.log(users)}
+               
                 <div className="modal-body p-0">
                   <ChatComp
                     roomId={roomId}
