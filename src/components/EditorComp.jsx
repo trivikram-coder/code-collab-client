@@ -40,9 +40,15 @@ const EditorComp = ({ fileId,roomId,roomName,userName,code, language, onCodeChan
   
   // Sync with parent when file changes
   useEffect(() => {
-    setLocalLang(language || "javascript");
+  if (code !== localCode) {
     setLocalCode(code || codeTemplates[language] || codeTemplates["javascript"]);
-  }, [code, language]);
+  }
+
+  if (language !== localLang) {
+    setLocalLang(language || "javascript");
+  }
+}, [code, language]);
+
 const leaveRoom = () => {
   toast.info(`${userName} left the room ${roomName}`)
     socket.emit("leave-room", { roomId, userName });
@@ -50,12 +56,9 @@ const leaveRoom = () => {
   };
   // Code change
   const handleChange = (value) => {
-    if(!canEdit){
-      toast.warning("⚠️ You don't have permission to edit")
-      return;
-    }
+    
     if (value === undefined) return;
-
+   
     setLocalCode(value);
     onCodeChange(value);
 
@@ -71,7 +74,7 @@ const leaveRoom = () => {
 const role = currentUser?.role;
 
 const canEdit = role === "editor" || role === "admin";
-console.log("Editor or not the useer : ",canEdit)
+
   // Run code
   const handleRun = async () => {
     try {

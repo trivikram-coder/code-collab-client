@@ -119,32 +119,29 @@ const setActive = (id) => {
     setActive(newFile.id)
   };
 
-  const updateFileContent = (value) => {
-    if(!currentRole||currentRole==="viewer"){
-      toast.warning("You are not allowed to modify the file")
-      return;
-    }
-    // 🔥 IGNORE REMOTE UPDATES
-    if (isRemoteUpdate.current) {
-      isRemoteUpdate.current = false;
-      return;
-    }
+ const updateFileContent = (value) => {
 
-    if (!activeFileId) return;
+  if (!activeFileId) return;
 
-    setFiles((prev) =>
-      prev.map((file) =>
-        file.id === activeFileId ? { ...file, content: value } : file
-      )
-    );
+  // 🔥 First update local state immediately
+  setFiles(prev =>
+    prev.map(file =>
+      file.id === activeFileId
+        ? { ...file, content: value }
+        : file
+    )
+  );
 
-    socket.emit("file-content-update", {
-      roomId,
-      userName,
-      fileId: activeFileId,
-      content: value,
-    });
-  };
+  // 🔥 THEN emit (debounced recommended)
+  socket.emit("file-content-update", {
+    roomId,
+    userName,
+    fileId: activeFileId,
+    content: value,
+  });
+};
+
+
 
   const deleteFile = (id) => {
     if(!currentRole||currentRole==="viewer"){
@@ -270,16 +267,15 @@ useEffect(() => {
 
   useEffect(() => {
     const handleContentUpdate = ({ fileId, content }) => {
-      isRemoteUpdate.current = true;
+  setFiles(prev =>
+    prev.map(file =>
+      file.id === fileId && file.content !== content
+        ? { ...file, content }
+        : file
+    )
+  );
+};
 
-      setFiles((prev) =>
-        prev.map((file) =>
-          file.id === fileId && file.content !== content
-            ? { ...file, content }
-            : file
-        )
-      );
-    };
 
     socket.on("file-content-updated", handleContentUpdate);
 
@@ -362,7 +358,7 @@ useEffect(() => {
         <div className="col-10 p-0 editor-section">
           {activeFile ? (
             <EditorComp
-            key={activeFileId}
+            
             fileId={activeFileId}
             roomId={roomId}
             roomName={roomName}

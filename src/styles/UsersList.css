@@ -1,101 +1,162 @@
-/* ---------------------------- */
-/*      USERS LIST WRAPPER      */
-/* ---------------------------- */
-.users-list-wrapper {
-  padding: 10px;
-  background: transparent;
+/* MAIN PANEL */
+.users-panel {
+  background: #0f172a;
+  border-radius: 14px;
+  padding: 16px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
-.users-title {
-  margin: 0 0 10px 0;
+/* EMPTY STATE */
+.users-empty {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+/* HEADER */
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.users-header h6 {
+  color: white;
+  font-weight: 600;
+  margin: 0;
+}
+
+.users-count {
+  background: #2563eb;
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: white;
   font-size: 13px;
-  color: #cbd5e1;
-  font-weight: 700;
 }
 
-/* ---------------------------- */
-/*        USERS LIST ITEM       */
-/* ---------------------------- */
+/* ADMIN BOX */
+.admin-box {
+  background: rgba(255, 215, 0, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #facc15;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* LIST */
 .users-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow-y: auto;
+  flex: 1;
 }
 
-.users-item {
+/* USER CARD */
+.user-card {
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  transition: 0.2s ease;
+}
+
+.user-card:hover {
+  background: #273549;
+}
+
+/* CURRENT USER HIGHLIGHT */
+.current-user {
+  border: 1px solid #3b82f6;
+}
+
+/* LEFT SIDE */
+.user-left {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  color: #e5e7eb;
-  font-weight: 600;
+  flex-wrap: wrap;
 }
 
-.user-dot {
-  font-size: 12px;
+/* ONLINE DOT */
+.online-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
 }
 
+/* USER NAME */
 .user-name {
-  font-size: 13px;
+  color: white;
+  font-weight: 500;
 }
 
-/* Empty state */
-.users-empty {
-  padding: 12px;
-  text-align: center;
-  color: #94a3b8;
-  font-weight: 600;
+/* ROLE BADGE */
+.role-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: capitalize;
 }
-.users-list-wrapper {
-  padding: 10px;
+
+.role-admin {
+  background: #facc15;
+  color: black;
+}
+
+.role-editor {
+  background: #22c55e;
+  color: white;
+}
+
+.role-viewer {
+  background: #64748b;
+  color: white;
+}
+
+/* CHANGE BUTTON */
+.change-btn {
   background: transparent;
-}
-
-.users-title {
-  margin: 0 0 10px 0;
-  font-size: 13px;
+  border: 1px solid #cbd5e1;
   color: #cbd5e1;
-  font-weight: 700;
-}
-
-.users-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.users-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  color: #e5e7eb;
-  font-weight: 600;
-}
-
-/* highlight current user */
-.users-item.active-user {
-  background: rgba(37, 99, 235, 0.35);
-  border: 1px solid rgba(37, 99, 235, 0.6);
-}
-
-.user-dot {
+  padding: 4px 8px;
+  border-radius: 6px;
   font-size: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
-.user-name {
-  font-size: 13px;
+.change-btn:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
 }
 
-.users-empty {
-  padding: 12px;
-  text-align: center;
-  color: #94a3b8;
-  font-weight: 600;
+/* 🔥 MOBILE FIX */
+@media (max-width: 768px) {
+  .users-panel {
+    padding: 12px;
+  }
+
+  .user-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .change-btn {
+    width: 100%;
+  }
 }

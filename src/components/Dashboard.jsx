@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import socket from "../socket/socket";
 const Dashboard = () => {
   const navigate = useNavigate();
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -50,17 +50,60 @@ const Dashboard = () => {
   };
 
   const joinRoom = () => {
-    if (!userName.trim()) return;
-    if (mode === "create" && !roomName.trim()) return;
-    if (mode === "join" && !roomId.trim()) return;
+  if (!userName.trim()) {
+    toast.error("Username is required");
+    return;
+  }
 
-    const finalRoomId = mode === "create" ? uniqueId : roomId;
-    if (mode === "create") localStorage.setItem(`room:${uniqueId}`, roomName);
+  if (mode === "create" && !roomName.trim()) {
+    toast.error("Room name is required");
+    return;
+  }
 
-    toast.success(`${mode === "create" ? "Room created" : "Joined room"}!`);
-    navigate(`/editor/${finalRoomId}`, { state: { userName, roomName: mode === "create" ? roomName : null } });
+  if (mode === "join" && !roomId.trim()) {
+    toast.error("Room ID is required");
+    return;
+  }
+
+  const finalRoomId = mode === "create" ? uniqueId : roomId;
+
+  // ---------------- CREATE ----------------
+  if (mode === "create") {
+    localStorage.setItem(`room:${uniqueId}`, roomName);
+
+    socket.emit("create-room", {
+      roomId: uniqueId,
+      roomName,
+      userName
+    });
+
+  } else {
+    // ---------------- JOIN ----------------
+    socket.emit("join-room", {
+      roomId,
+      userName
+    });
+  }
+
+  // Listen for backend error
+  socket.once("error-message", ({ error }) => {
+    toast.error(error);
+  });
+
+  // Navigate only after slight delay (ensures socket join)
+  setTimeout(() => {
+    toast.success(
+      mode === "create" ? "Room created!" : "Joined room!"
+    );
+
+    navigate(`/editor/${finalRoomId}`, {
+      state: { userName }
+    });
+
     setShowModal(false);
-  };
+  }, 300);
+};
+
 
   const joinRecentRoom = (id) => {
     toast.info("Joining recent room...");
