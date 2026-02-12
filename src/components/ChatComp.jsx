@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/Chat.css";
-
 import socket from "../socket/socket";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const ChatComp = ({roomId,userName,roomName,chatOpen,chatUsers,onNewMessage}) => {
+const ChatComp = ({
+  roomId,
+  userName,
+  roomName,
+  chatOpen,
+  chatUsers,
+  onNewMessage,
+}) => {
   const navigate = useNavigate();
-  // const {roomId}=useParams()
-  // const{state}=useLocation()
-  // const userName=state?.userName
-  console.log(`Chat users :${chatUsers} ${userName}`)
+
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState([]);
-  // const[chatUsers,setChatUsers]=useState([])
-  // const [users, setUsers] = useState([]);
-
   const chatEndRef = useRef(null);
 
   // -------------------------
@@ -23,35 +23,37 @@ const ChatComp = ({roomId,userName,roomName,chatOpen,chatUsers,onNewMessage}) =>
   useEffect(() => {
     if (!roomId || !userName) return;
 
-    socket.emit("join-room", { roomId,roomName, userName });
+    socket.emit("join-room", { roomId, roomName, userName });
 
     return () => {
       socket.emit("leave-room", { roomId, userName });
     };
-  }, [roomId, userName]);
+  }, [roomId, userName, roomName]);
 
   // -------------------------
   // SOCKET LISTENERS
   // -------------------------
   useEffect(() => {
-    
-
-    socket.on("receive-message", (data) => {
-      console.log("Room chats",data)
+    const handleReceiveMessage = (data) => {
       setChats(data.chats || []);
-    });
+    };
 
-    socket.on("new-message", (msg) => {
+    const handleNewMessage = (msg) => {
       setChats((prev) => [...prev, msg]);
-      if(!chatOpen&&msg.userName!==userName){
-       onNewMessage?.()
+
+      const sender = msg.userName || msg.user;
+
+      if (!chatOpen && sender !== userName) {
+        onNewMessage?.();
       }
-    });
+    };
+
+    socket.on("receive-message", handleReceiveMessage);
+    socket.on("new-message", handleNewMessage);
 
     return () => {
-      socket.off("room-users");
-      socket.off("receive-message");
-      socket.off("new-message");
+      socket.off("receive-message", handleReceiveMessage);
+      socket.off("new-message", handleNewMessage);
     };
   }, [chatOpen, userName, onNewMessage]);
 
@@ -67,7 +69,8 @@ const ChatComp = ({roomId,userName,roomName,chatOpen,chatUsers,onNewMessage}) =>
   // -------------------------
   const sendMessage = () => {
     if (!message.trim()) return;
-    if(!userName)return;
+    if (!userName) return;
+
     socket.emit("send-message", {
       roomId,
       userName,
@@ -77,8 +80,6 @@ const ChatComp = ({roomId,userName,roomName,chatOpen,chatUsers,onNewMessage}) =>
     setMessage("");
   };
 
-
-
   return (
     <div className="chat-container">
       {/* HEADER */}
@@ -87,35 +88,38 @@ const ChatComp = ({roomId,userName,roomName,chatOpen,chatUsers,onNewMessage}) =>
         <div className="chat-header-right">
           <span className="show-user">{userName}</span>
           <span className="online-status">● Online</span>
-          
         </div>
       </div>
 
       {/* USERS LIST */}
       <div className="users-list">
         <h4>Collaborators</h4>
-        {chatUsers.map((u, index) => (
-          <div key={index} className="user-item">
-            {u}
+        {chatUsers?.map((u) => (
+          <div key={u._id || u.userName} className="user-item">
+            {u.role === "admin" && "👑 "}
+            {u.userName}
           </div>
         ))}
       </div>
 
       {/* CHAT MESSAGES */}
       <div className="chat-messages">
-        {chats.map((chat, index) => (
-          <div
-            key={index}
-            className={`message ${
-              chat.user === userName ? "sent" : "received"
-            }`}
-          >
-            <span className="user">
-              {chat.user === userName ? "You" : chat.user}
-            </span>
-            <p>{chat.message}</p>
-          </div>
-        ))}
+        {chats.map((chat, index) => {
+          const sender = chat.userName || chat.user;
+          const isCurrentUser = sender === userName;
+
+          return (
+            <div
+              key={index}
+              className={`message ${isCurrentUser ? "sent" : "received"}`}
+            >
+              <span className="user">
+                {isCurrentUser ? "You" : sender}
+              </span>
+              <p>{chat.message}</p>
+            </div>
+          );
+        })}
         <div ref={chatEndRef} />
       </div>
 

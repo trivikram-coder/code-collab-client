@@ -5,6 +5,7 @@ import "../styles/EditorMain.css";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Trash } from "lucide-react";
 import socket from "../socket/socket";
+import { toast } from "react-toastify";
 
 
 /*
@@ -37,7 +38,8 @@ const EditorMain = () => {
   const [showChat, setShowChat] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [users, setUsers] = useState([]);
-
+  const currentUser=users.find(u=>u.userName===userName);
+  const currentRole=currentUser?.role
   /* ---------------- HELPERS ---------------- */
   const activeFile = Array.isArray(files)
     ? files.find((f) => f.id === activeFileId)
@@ -90,9 +92,13 @@ const setActive = (id) => {
   /* ---------------- FILE ACTIONS ---------------- */
   
   const createFile = () => {
+    if(!currentRole||currentRole==="viewer"){
+      toast.warning("You are not allowed to add the file")
+      return;
+    }
     const name = prompt("Enter file name (example: app.py)");
     if (!name) return;
-
+    
     const uniqueName = getUniqueFileName(name);
 
     const newFile = {
@@ -105,6 +111,7 @@ const setActive = (id) => {
   
     socket.emit("file-create", {
       roomId,
+      userName,
       file: newFile,
     });
 
@@ -113,6 +120,10 @@ const setActive = (id) => {
   };
 
   const updateFileContent = (value) => {
+    if(!currentRole||currentRole==="viewer"){
+      toast.warning("You are not allowed to modify the file")
+      return;
+    }
     // 🔥 IGNORE REMOTE UPDATES
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
@@ -129,12 +140,17 @@ const setActive = (id) => {
 
     socket.emit("file-content-update", {
       roomId,
+      userName,
       fileId: activeFileId,
       content: value,
     });
   };
 
   const deleteFile = (id) => {
+    if(!currentRole||currentRole==="viewer"){
+      toast.warning("You are not allowed to delete the file")
+      return;
+    }
     const file = files.find((f) => f.id === id);
 
     if (!file || file.createdBy !== userName) {
@@ -206,10 +222,10 @@ useEffect(() => {
 
  useEffect(() => {
   const handleRoomUsers = (data) => {
-   
+   console.log("Room users ",data)
     setUsers(data);
   };
-
+ 
   socket.on("room-users", handleRoomUsers);
 
   return () => {
@@ -218,6 +234,9 @@ useEffect(() => {
 }, []);
 
   /* ---------------- SOCKET LISTENERS ---------------- */
+useEffect(()=>{
+  
+},[])
 useEffect(() => {
   socket.on("file-created", (filesFromServer) => {
     setFiles(filesFromServer);
@@ -348,10 +367,10 @@ useEffect(() => {
             roomId={roomId}
             roomName={roomName}
             userName={userName}
-              code={activeFile.content}
-              language={activeFile.language}
-              onCodeChange={updateFileContent}
-              users={users}
+            code={activeFile.content}
+            language={activeFile.language}
+            onCodeChange={updateFileContent}
+            users={users}
             />
           ) : (
             <div className="no-file">

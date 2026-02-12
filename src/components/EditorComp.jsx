@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { Button, Modal } from "react-bootstrap";
 
 
-const EditorComp = ({ fileId,roomId,roomName,userName,code, language, onCodeChange }) => {
+const EditorComp = ({ fileId,roomId,roomName,userName,code, language, onCodeChange,users }) => {
   const navigate=useNavigate()
   const codeTemplates = {
     javascript: "console.log('Hello World');",
@@ -24,33 +24,20 @@ const EditorComp = ({ fileId,roomId,roomName,userName,code, language, onCodeChan
     json: "{\n  \"message\": \"Hello World\"\n}",
   };
   const[leaveRoomAlertBox,setLeaveRoomAlertBox]=useState(false)
+  const[isEditor,setIsEditor]=useState("");
  
-  
 
   const [loading, setLoading] = useState(false);
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("");
   const [input, setInput] = useState("");
-  const[users,setUsers]=useState([])
+  // const[users,setUsers]=useState([])
   const [localLang, setLocalLang] = useState(language || "javascript");
   const [localCode, setLocalCode] = useState(
     code || codeTemplates[language] || codeTemplates["javascript"]
   );
-  useEffect(() => {
-  if (!roomId || !userName) return;
 
-  socket.emit("join-room", { roomId,roomName, userName });
-
-  const handleRoomUsers = (data) => {
-    setUsers(data);
-  };
-
-  socket.on("room-users", handleRoomUsers);
-
-  return () => {
-    socket.off("room-users", handleRoomUsers);
-  };
-}, [roomId, userName]);
+  
   // Sync with parent when file changes
   useEffect(() => {
     setLocalLang(language || "javascript");
@@ -63,6 +50,10 @@ const leaveRoom = () => {
   };
   // Code change
   const handleChange = (value) => {
+    if(!canEdit){
+      toast.warning("⚠️ You don't have permission to edit")
+      return;
+    }
     if (value === undefined) return;
 
     setLocalCode(value);
@@ -76,7 +67,11 @@ const leaveRoom = () => {
     //   language: localLang,
     // });
   };
+ const currentUser = users?.find(u => u.userName === userName);
+const role = currentUser?.role;
 
+const canEdit = role === "editor" || role === "admin";
+console.log("Editor or not the useer : ",canEdit)
   // Run code
   const handleRun = async () => {
     try {
@@ -135,22 +130,25 @@ const leaveRoom = () => {
       {/* MAIN */}
       <div className="editor-main">
         <div className="editor-wrapper">
-          <Editor
-          key={fileId}
-            height="100%"
-            theme="vs-dark"
-            language={localLang}
-            value={localCode}
-            onChange={handleChange}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              autoClosingBrackets: "always",
-              autoIndent: "full",
-              quickSuggestions: false,
-              suggestOnTriggerCharacters: false,
-            }}
-          />
+         <Editor
+  key={fileId}
+  height="100%"
+  theme="vs-dark"
+  language={localLang}
+  value={localCode}
+  onChange={ handleChange }
+  
+  options={{
+    readOnly:!canEdit,
+    minimap: { enabled: false },
+    fontSize: 14,
+    autoClosingBrackets: "always",
+    autoIndent: "full",
+    quickSuggestions: false,
+    suggestOnTriggerCharacters: false,
+  }}
+/>
+
         </div>
 
         {/* Output panel */}
@@ -181,7 +179,7 @@ const leaveRoom = () => {
           </pre>
         </div>
         <div className="users-panel">
-    <UsersList users={users} userName={userName}/>
+    <UsersList users={users} userName={userName} roomId={roomId}/>
   </div>
       </div>
       {leaveRoomAlertBox && (
