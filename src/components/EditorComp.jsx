@@ -1,98 +1,100 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import socket from "../socket/socket";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../styles/Editor.css";
 import UsersList from "./UsersList";
 import { toast } from "react-toastify";
-import { Button, Modal } from "react-bootstrap";
+import api from "./api/api";
 
+const EditorComp = ({
+  fileId,
+  roomId,
+  roomName,
+  userName,
+  code,
+  language,
+  users,
+}) => {
+  const navigate = useNavigate();
 
-const EditorComp = ({ fileId,roomId,roomName,userName,code, language, onCodeChange,users }) => {
-  const navigate=useNavigate()
-  const codeTemplates = {
-    javascript: "console.log('Hello World');",
-    typescript:
-      "//Sorry currently facing some issues with Ts.\n//Please prefer other languages\nlet x: number = 10;\nconsole.log(x);",
-    java:
-      "public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello World\");\n  }\n}",
-    python: "print('Hello World')",
-    cpp: "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n  cout << \"Hello World\";\n  return 0;\n}",
-    c: "#include <stdio.h>\n\nint main(){\n  printf(\"Hello World\");\n  return 0;\n}",
-    html: "<!DOCTYPE html>\n<html>\n<head>\n  <title>Hello</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>",
-    css: "body {\n  font-family: Arial;\n}\n",
-    json: "{\n  \"message\": \"Hello World\"\n}",
-  };
-  const[leaveRoomAlertBox,setLeaveRoomAlertBox]=useState(false)
-  const[isEditor,setIsEditor]=useState("");
- 
+  const editorRef = useRef(null);
+  const isRemoteUpdate = useRef(false);
 
+  const [leaveRoomAlertBox, setLeaveRoomAlertBox] = useState(false);
   const [loading, setLoading] = useState(false);
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("");
   const [input, setInput] = useState("");
-  // const[users,setUsers]=useState([])
-  const [localLang, setLocalLang] = useState(language || "javascript");
-  const [localCode, setLocalCode] = useState(
-    code || codeTemplates[language] || codeTemplates["javascript"]
-  );
 
-  
-  // Sync with parent when file changes
-  useEffect(() => {
-  if (code !== localCode) {
-    setLocalCode(code || codeTemplates[language] || codeTemplates["javascript"]);
-  }
+  const currentUser = users?.find((u) => u.userName === userName);
+  const role = currentUser?.role;
+  const canEdit = role === "editor" || role === "admin";
 
-  if (language !== localLang) {
-    setLocalLang(language || "javascript");
-  }
-}, [code, language]);
-
-const leaveRoom = () => {
-  toast.info(`${userName} left the room ${roomName}`)
-    socket.emit("leave-room", { roomId, userName });
-    navigate("/");
-  };
-  // Code change
+  /* ============================= */
+  /* 🔥 HANDLE LOCAL TYPING       */
+  /* ============================= */
   const handleChange = (value) => {
-    
-    if (value === undefined) return;
-   
-    setLocalCode(value);
-    onCodeChange(value);
+    if (!value) return;
 
-    // ⚠️ REMOVE THIS SOCKET EMIT TO KEEP IT INDEPENDENT
-    // socket.emit("code-change", {
-    //   roomId,
-    //   userName,
-    //   code: value,
-    //   language: localLang,
-    // });
+    // Ignore if change came from remote update
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
+
+    socket.emit("file-content-update", {
+      roomId,
+      userName,
+      fileId,
+      content: value,
+      version:Date.now()
+    });
   };
- const currentUser = users?.find(u => u.userName === userName);
-const role = currentUser?.role;
 
-const canEdit = role === "editor" || role === "admin";
+  /* ============================= */
+  /* 🔥 HANDLE REMOTE UPDATES     */
+  /* ============================= */
+  useEffect(() => {
+  if (!editorRef.current) return;
 
-  // Run code
+  const editor = editorRef.current;
+  const model = editor.getModel();
+
+  if (!model) return;   // 🔥 VERY IMPORTANT
+
+  const currentValue = model.getValue();
+
+  if (code !== currentValue) {
+    isRemoteUpdate.current = true;
+
+    editor.executeEdits("", [
+      {
+        range: model.getFullModelRange(),
+        text: code || "",
+      },
+    ]);
+  }
+}, [code]);
+
+
+  /* ============================= */
+  /* 🔥 HANDLE RUN CODE           */
+  /* ============================= */
   const handleRun = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        "https://code-collab-server.vkstore.site/run",
+
+      const response = await api.post("/run",
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            language: localLang,
-            code: localCode,
+            language,
+            code: editorRef.current?.getValue(),
             input,
-          }),
+      
         }
       );
-
-      const data = await response.json();
+     
+      const data =  response.data;
       setStatus(data.status);
       setOutput(data.output);
     } catch (err) {
@@ -101,6 +103,16 @@ const canEdit = role === "editor" || role === "admin";
       setLoading(false);
     }
   };
+
+  /* ============================= */
+  /* 🔥 HANDLE LEAVE ROOM         */
+  /* ============================= */
+  const leaveRoom = () => {
+    toast.info(`${userName} left the room ${roomName}`);
+    socket.emit("leave-room", { roomId, userName });
+    navigate("/");
+  };
+
   return (
     <div className="editor-page">
       {/* HEADER */}
@@ -109,9 +121,13 @@ const canEdit = role === "editor" || role === "admin";
           <span className="user">👤 {userName}</span>
           <span className="room">Room: {roomName}</span>
         </div>
+
         <div className="right">
           <span className="status-online">🟢 Online</span>
-          <button className="leave-btn" onClick={()=>setLeaveRoomAlertBox(true)}>
+          <button
+            className="leave-btn"
+            onClick={() => setLeaveRoomAlertBox(true)}
+          >
             Leave Room
           </button>
         </div>
@@ -119,12 +135,18 @@ const canEdit = role === "editor" || role === "admin";
 
       {/* TOOLBAR */}
       <div className="editor-toolbar">
-        <span className="language-badge">{localLang.toUpperCase()}</span>
+        <span className="language-badge">
+          {language?.toUpperCase()}
+        </span>
 
         {!loading ? (
-          <button className="run-btn" onClick={handleRun}>
-            ▶ Run
-          </button>
+          <button
+            className={`run-btn ${!canEdit ? "disabled-btn" : ""}`}
+            onClick={handleRun}
+            disabled={!canEdit}
+            >
+  ▶ Run
+</button>
         ) : (
           <span className="run-btn">Running...</span>
         )}
@@ -133,43 +155,44 @@ const canEdit = role === "editor" || role === "admin";
       {/* MAIN */}
       <div className="editor-main">
         <div className="editor-wrapper">
-         <Editor
-  key={fileId}
-  height="100%"
-  theme="vs-dark"
-  language={localLang}
-  value={localCode}
-  onChange={ handleChange }
-  
-  options={{
-    readOnly:!canEdit,
-    minimap: { enabled: false },
-    fontSize: 14,
-    autoClosingBrackets: "always",
-    autoIndent: "full",
-    quickSuggestions: false,
-    suggestOnTriggerCharacters: false,
-  }}
-/>
-
+          <Editor
+            key={fileId}
+            height="100%"
+            theme="vs-dark"
+            language={language}
+            defaultValue={code}
+            onMount={(editor) => {
+              editorRef.current = editor;
+            }}
+            onChange={handleChange}
+            options={{
+              readOnly: !canEdit,
+              minimap: { enabled: false },
+              fontSize: 14,
+              automaticLayout: true,
+            }}
+          />
         </div>
 
-        {/* Output panel */}
+        {/* OUTPUT PANEL */}
         <div className="output-wrapper">
           <div className="output-header">Input (STDIN)</div>
+
           <textarea
             className="input-box"
-            placeholder="Enter input here (stdin)..."
+            placeholder="Enter input here..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
 
           <div className="output-header">
-            Output
+            Output{" "}
             {status && (
               <span
                 className={
-                  status === "success" ? "output-success" : "output-error"
+                  status === "success"
+                    ? "output-success"
+                    : "output-error"
                 }
               >
                 {status}
@@ -181,58 +204,66 @@ const canEdit = role === "editor" || role === "admin";
             {output || "Run code to see output"}
           </pre>
         </div>
+
         <div className="users-panel">
-    <UsersList users={users} userName={userName} roomId={roomId}/>
-  </div>
-      </div>
-      {leaveRoomAlertBox && (
-  <>
-    <div className="modal fade show d-block" tabIndex="-1">
-      <div className="modal-dialog modal-dialog-centered">
-        <div
-          className="modal-content border-0 shadow-sm rounded-4"
-          style={{ backgroundColor: "#2c2c2c", color: "#fff" }}
-        >
-          <div className="modal-header border-0">
-            <h5 className="modal-title">Confirm Leave Room</h5>
-            <button
-              type="button"
-              className="btn-close btn-close-white"
-              onClick={() => setLeaveRoomAlertBox(false)}
-            ></button>
-          </div>
-
-          <div className="modal-body">
-            Are you sure you want to leave the room?
-          </div>
-
-          <div className="modal-footer border-0">
-            <button
-              className="btn btn-secondary rounded-3"
-              onClick={() => setLeaveRoomAlertBox(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-danger rounded-3"
-              onClick={leaveRoom}
-            >
-              Leave
-            </button>
-          </div>
+          <UsersList
+            users={users}
+            userName={userName}
+            roomId={roomId}
+          />
         </div>
       </div>
-    </div>
 
-    {/* Backdrop */}
-    <div
-      className="modal-backdrop fade show"
-      style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
-    ></div>
-  </>
-)}
+      {/* LEAVE MODAL */}
+      {leaveRoomAlertBox && (
+        <>
+          <div className="modal fade show d-block">
+            <div className="modal-dialog modal-dialog-centered">
+              <div
+                className="modal-content border-0 shadow-sm rounded-4"
+                style={{
+                  backgroundColor: "#2c2c2c",
+                  color: "#fff",
+                }}
+              >
+                <div className="modal-header border-0">
+                  <h5 className="modal-title">
+                    Confirm Leave Room
+                  </h5>
+                  <button
+                    className="btn-close btn-close-white"
+                    onClick={() =>
+                      setLeaveRoomAlertBox(false)
+                    }
+                  ></button>
+                </div>
 
+                <div className="modal-body">
+                  Are you sure you want to leave the room?
+                </div>
 
+                <div className="modal-footer border-0">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() =>
+                      setLeaveRoomAlertBox(false)
+                    }
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={leaveRoom}
+                  >
+                    Leave
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show"></div>
+        </>
+      )}
     </div>
   );
 };

@@ -1,17 +1,18 @@
 import axios from "axios";
 
-// Vite / CRA compatible
-const BASE_URL =
-  import.meta.env.VITE_API_URL
+// 🌍 API Base URL (Vite)
+export const apiUrl = import.meta.env.VITE_API_URL;
+
+// Axios instance
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: apiUrl,
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// 🔐 Attach auth / reset token automatically
+// 🔐 Attach token automatically
 api.interceptors.request.use((config) => {
   const token =
     localStorage.getItem("token") ||
@@ -20,18 +21,20 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
 // 🔁 Global auth failure handling
 api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if ([401, 403].includes(err.response?.status)) {
+  (response) => response,
+  (error) => {
+    if ([401, 403].includes(error.response?.status)) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
     }
-    return Promise.reject(err);
+
+    return Promise.reject(error);
   }
 );
 

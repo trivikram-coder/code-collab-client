@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import EditorComp from "./EditorComp";
 import ChatComp from "./ChatComp";
 import "../styles/EditorMain.css";
@@ -7,52 +7,31 @@ import { Trash } from "lucide-react";
 import socket from "../socket/socket";
 import { toast } from "react-toastify";
 
-
-/*
-  FILE STRUCTURE:
-  {
-    id,
-    name,
-    language,
-    content,
-    createdBy
-  }
-*/
-
 const EditorMain = () => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const { roomId } = useParams();
   const { state } = useLocation();
-  const [userName,setUserName] = useState(state?.userName||"");
-  const [roomName,setRoomName]=useState(state?.roomName ||"")
 
+  const [userName, setUserName] = useState(state?.userName || "");
+  const [roomName, setRoomName] = useState(state?.roomName || "");
 
-  /* ---------------- FILE STATE ---------------- */
-  const [files, setFiles] = useState([]); // ALWAYS array
+  const [files, setFiles] = useState([]);
   const [activeFileId, setActiveFileId] = useState(null);
 
-  /* 🔥 REMOTE UPDATE FLAG */
-  const isRemoteUpdate = useRef(false);
-
-  /* ---------------- CHAT STATE ---------------- */
   const [showChat, setShowChat] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [users, setUsers] = useState([]);
-  const currentUser=users.find(u=>u.userName===userName);
-  const currentRole=currentUser?.role
-  /* ---------------- HELPERS ---------------- */
-  const activeFile = Array.isArray(files)
-    ? files.find((f) => f.id === activeFileId)
-    : null;
+
+  const activeFile = files.find((f) => f.id === activeFileId);
+  const currentUser = users.find((u) => u.userName === userName);
+  const currentRole = currentUser?.role;
+
+  /* ============================= */
+  /* 🔥 HELPERS                   */
+  /* ============================= */
 
   const detectLanguage = (filename) => {
-    if (!filename) return "plaintext";
-
-    const cleanName = filename.trim().replace(/\s*\(\d+\)$/, "");
-    const parts = cleanName.split(".");
-    if (parts.length < 2) return "plaintext";
-
-    const ext = parts.pop().toLowerCase();
+    const ext = filename.split(".").pop()?.toLowerCase();
 
     const map = {
       js: "javascript",
@@ -69,93 +48,39 @@ const EditorMain = () => {
     return map[ext] || "plaintext";
   };
 
-  // ---------------- DUPLICATE FILE CHECK ----------------
-  const getUniqueFileName = (name) => {
-    const allNames = files.map((f) => f.name);
-
-    if (!allNames.includes(name)) return name;
-
-    let count = 1;
-    let newName = `${name} (${count})`;
-
-    while (allNames.includes(newName)) {
-      count++;
-      newName = `${name} (${count})`;
-    }
-
-    return newName;
+  const setActive = (id) => {
+    setActiveFileId(id);
+    localStorage.setItem(`activeFile_${roomId}`, id);
   };
-const setActive = (id) => {
-  setActiveFileId(id);
-  localStorage.setItem(`activeFile_${roomId}`, id);
-};
-  /* ---------------- FILE ACTIONS ---------------- */
-  
+
+  /* ============================= */
+  /* 🔥 FILE ACTIONS              */
+  /* ============================= */
+
   const createFile = () => {
-    if(!currentRole||currentRole==="viewer"){
-      toast.warning("You are not allowed to add the file")
+    if (!currentRole || currentRole === "viewer") {
+      toast.warning("You are not allowed to add files");
       return;
     }
-    const name = prompt("Enter file name (example: app.py)");
+
+    const name = prompt("Enter file name (example: app.js)");
     if (!name) return;
-    
-    const uniqueName = getUniqueFileName(name);
 
     const newFile = {
       id: crypto.randomUUID(),
-      name: uniqueName,
-      language: detectLanguage(uniqueName),
+      name,
+      language: detectLanguage(name),
       content: "",
       createdBy: userName,
+      version:0
     };
-  
-    socket.emit("file-create", {
-      roomId,
-      userName,
-      file: newFile,
-    });
 
-    // 🔥 SET ACTIVE FILE IMMEDIATELY
-    setActive(newFile.id)
+    socket.emit("file-create", { roomId, userName, file: newFile });
   };
 
- const updateFileContent = (value) => {
-
-  if (!activeFileId) return;
-
-  // 🔥 First update local state immediately
-  setFiles(prev =>
-    prev.map(file =>
-      file.id === activeFileId
-        ? { ...file, content: value }
-        : file
-    )
-  );
-
-  // 🔥 THEN emit (debounced recommended)
-  socket.emit("file-content-update", {
-    roomId,
-    userName,
-    fileId: activeFileId,
-    content: value,
-  });
-};
-
-
-
   const deleteFile = (id) => {
-    if(!currentRole||currentRole==="viewer"){
-      toast.warning("You are not allowed to delete the file")
-      return;
-    }
-    const file = files.find((f) => f.id === id);
-
-    if (!file || file.createdBy !== userName) {
-      socket.emit("file-delete", {
-        roomId,
-        fileId: id,
-        userName,
-      });
+    if (!currentRole || currentRole === "viewer") {
+      toast.warning("You are not allowed to delete files");
       return;
     }
 
@@ -164,161 +89,107 @@ const setActive = (id) => {
       fileId: id,
       userName,
     });
+  };
 
-    setFiles((prevFiles) => {
-      const updatedFiles = prevFiles.filter((f) => f.id !== id);
+  /* ============================= */
+  /* 🔥 SOCKET: JOIN ROOM         */
+  /* ============================= */
 
-      if (id === activeFileId) {
+  useEffect(() => {
+    if (!roomId || !userName) return;
+
+    const joinRoom = () => {
+      socket.emit("join-room", { roomId, roomName, userName });
+    };
+
+    if (socket.connected) joinRoom();
+    socket.on("connect", joinRoom);
+
+    socket.on("room-details", (data) => {
+      setRoomName(data.roomName);
+      setUserName(data.userName);
+    });
+
+    socket.on("room-users", (data) => {
+      setUsers(data);
+    });
+
+    return () => {
+      socket.off("connect", joinRoom);
+      socket.off("room-details");
+      socket.off("room-users");
+    };
+  }, [roomId, userName]);
+
+  /* ============================= */
+  /* 🔥 SOCKET: FILE EVENTS       */
+  /* ============================= */
+
+  useEffect(() => {
+    socket.on("file-created", (filesFromServer) => {
+      setFiles(filesFromServer);
+
+      if (!activeFileId && filesFromServer.length > 0) {
+        setActive(filesFromServer[0].id);
+      }
+    });
+
+    socket.on("file-content-updated", ({ fileId, content }) => {
+      setFiles((prev) =>
+        prev.map((file) =>
+          file.id === fileId ? { ...file, content } : file
+        )
+      );
+    });
+
+    socket.on("file-deleted", (updatedFiles) => {
+      setFiles(updatedFiles);
+
+      if (!updatedFiles.find((f) => f.id === activeFileId)) {
         setActive(updatedFiles[0]?.id || null);
       }
-
-      return updatedFiles;
-    });
-  };
-
-  /* ---------------- CHAT ACTIONS ---------------- */
-  const openChat = () => {
-    setShowChat(true);
-    setUnreadCount(0);
-  };
-  
-useEffect(() => {
-  const saved = localStorage.getItem(`activeFile_${roomId}`);
-  if (saved) {
-    setActiveFileId(saved);
-  }
-}, [roomId]);
-
-useEffect(() => {
-  if (!roomId || !userName) return;
-
-  const handleRoomDetails = (data) => {
-    
-    setUserName(data.userName)
-    setRoomName(data.roomName)
-  };
-
-  socket.on("room-details", handleRoomDetails);
-
-  const joinRoom = () => {
-    socket.emit("join-room", { roomId, roomName, userName });
-  };
-
-  if (socket.connected) {
-    joinRoom();
-  }
-
-  socket.on("connect", joinRoom);
-
-  return () => {
-    socket.off("room-details", handleRoomDetails);
-    socket.off("connect", joinRoom);
-  };
-
-}, [roomId]);
-
- useEffect(() => {
-  const handleRoomUsers = (data) => {
-   console.log("Room users ",data)
-    setUsers(data);
-  };
- 
-  socket.on("room-users", handleRoomUsers);
-
-  return () => {
-    socket.off("room-users", handleRoomUsers);
-  };
-}, []);
-
-  /* ---------------- SOCKET LISTENERS ---------------- */
-useEffect(()=>{
-  
-},[])
-useEffect(() => {
-  socket.on("file-created", (filesFromServer) => {
-    setFiles(filesFromServer);
-
-    // If active file is not present, set latest file as active
-    const exists = filesFromServer.some(f => f.id === activeFileId);
-
-    if (!exists) {
-      const latestFile = filesFromServer[filesFromServer.length - 1];
-      if (latestFile) setActive(latestFile.id);
-    }
-  });
-
-  return () => {
-    socket.off("file-created");
-  };
-}, [activeFileId, roomId]);
-
-
-
-
-  useEffect(() => {
-    socket.on("delete-error", ({ msg }) => {
-      alert(msg);
     });
 
     return () => {
-      socket.off("delete-error");
+      socket.off("file-created");
+      socket.off("file-content-updated");
+      socket.off("file-deleted");
     };
-  }, []);
+  }, [activeFileId]);
+
+  /* ============================= */
+  /* 🔥 LOAD ACTIVE FILE          */
+  /* ============================= */
 
   useEffect(() => {
-    const handleContentUpdate = ({ fileId, content }) => {
-  setFiles(prev =>
-    prev.map(file =>
-      file.id === fileId && file.content !== content
-        ? { ...file, content }
-        : file
-    )
-  );
-};
+    const saved = localStorage.getItem(`activeFile_${roomId}`);
+    if (saved) setActiveFileId(saved);
+  }, [roomId]);
 
+  /* ============================= */
+  /* 🔥 RENDER                    */
+  /* ============================= */
 
-    socket.on("file-content-updated", handleContentUpdate);
-
-    return () => {
-      socket.off("file-content-updated", handleContentUpdate);
-    };
-  }, []);
-  
-  /* ---------------- ACTIVE FILE SAFETY ---------------- */
-  useEffect(() => {
-  if (!files.length) return;
-
-  const exists = files.some((f) => f.id === activeFileId);
-
-  if (!exists) {
-    setActive(files[0].id);
+  if (!userName || !roomId) {
+    return (
+      <div className="vh-100 d-flex justify-content-center align-items-center">
+        <div className="card p-4 text-center">
+          <p className="text-danger">Please enter a valid room</p>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate("/dashboard")}
+          >
+            Join Room
+          </button>
+        </div>
+      </div>
+    );
   }
-}, [files, activeFileId]);
 
-
-  /* ---------------- RENDER ---------------- */
   return (
-    <>
-    {
-      (!userName || !roomId)?(
-       <div className="d-flex justify-content-center align-items-center vh-100">
-  <div className="card shadow p-4 text-center" style={{ maxWidth: "400px" }}>
-    <p className="fs-5 mb-4 text-danger">
-      Please enter a valid room
-    </p>
-    <button
-      className="btn btn-primary w-100"
-      onClick={() => navigate("/dashboard")}
-    >
-      Join Room
-    </button>
-  </div>
-</div>
-
-      ):(
- <div className="container-fluid editor-main-wrapper">
+    <div className="container-fluid editor-main-wrapper">
       <div className="row vh-100">
-        {/* FILE EXPLORER */}
+        {/* FILE SIDEBAR */}
         <div className="col-2 p-0 file-sidebar">
           <div className="file-header">
             <span>FILES</span>
@@ -327,7 +198,6 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* 🔥 SCROLLABLE FILE LIST */}
           <div className="file-list">
             {files.map((file) => (
               <div
@@ -338,8 +208,9 @@ useEffect(() => {
                 onClick={() => setActive(file.id)}
               >
                 <div className="file-name">
-  {file.name} <span className="file-user">— {file.createdBy}</span>
-</div>
+                  {file.name}{" "}
+                  <span className="file-user">— {file.createdBy}</span>
+                </div>
 
                 <Trash
                   size={16}
@@ -358,15 +229,13 @@ useEffect(() => {
         <div className="col-10 p-0 editor-section">
           {activeFile ? (
             <EditorComp
-            
-            fileId={activeFileId}
-            roomId={roomId}
-            roomName={roomName}
-            userName={userName}
-            code={activeFile.content}
-            language={activeFile.language}
-            onCodeChange={updateFileContent}
-            users={users}
+              fileId={activeFile.id}
+              roomId={roomId}
+              roomName={roomName}
+              userName={userName}
+              code={activeFile.content}
+              language={activeFile.language}
+              users={users}
             />
           ) : (
             <div className="no-file">
@@ -376,36 +245,39 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* FLOATING CHAT BUTTON */}
-      <button className="chat-float-btn" onClick={openChat}>
+      {/* CHAT BUTTON */}
+      <button
+        className="chat-float-btn"
+        onClick={() => {
+          setShowChat(true);
+          setUnreadCount(0);
+        }}
+      >
         💬
         {unreadCount > 0 && (
           <span className="chat-badge">{unreadCount}</span>
         )}
       </button>
 
-      {/* CHAT MODAL UI */}
+      {/* CHAT MODAL */}
       {showChat && (
         <>
           <div className="modal fade show d-block chat-modal">
             <div className="modal-dialog modal-dialog-end modal-lg">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">
-                    Room Chat ({users.length} online)
-                  </h5>
+                  <h5>Room Chat ({users.length} online)</h5>
                   <button
                     className="btn-close btn-close-white"
                     onClick={() => setShowChat(false)}
                   ></button>
                 </div>
-               
+
                 <div className="modal-body p-0">
                   <ChatComp
                     roomId={roomId}
                     roomName={roomName}
                     userName={userName}
-                    chatOpen={showChat}
                     chatUsers={users}
                     onNewMessage={() =>
                       setUnreadCount((prev) => prev + 1)
@@ -419,10 +291,6 @@ useEffect(() => {
         </>
       )}
     </div>
-      )
-    }
-   
-    </>
   );
 };
 
