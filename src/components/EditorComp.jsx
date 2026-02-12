@@ -16,6 +16,55 @@ const EditorComp = ({
   language,
   users,
 }) => {
+  const templates = {
+  javascript: `// JavaScript Template
+
+function main() {
+  console.log("Hello World");
+}
+
+// Call main function
+main();
+`,
+
+  java: `// Java Template
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello World");
+    }
+}
+`,
+
+  python: `# Python Template
+
+def main():
+    print("Hello World")
+
+if __name__ == "__main__":
+    main()
+`,
+
+  typescript: `// TypeScript Template
+
+function main(): void {
+  console.log("Hello World");
+}
+
+main();
+`,
+
+  json: `{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "Sample JSON template",
+  "dependencies": {}
+}
+`
+};
+
   const navigate = useNavigate();
 
   const editorRef = useRef(null);
@@ -160,7 +209,8 @@ const EditorComp = ({
             height="100%"
             theme="vs-dark"
             language={language}
-            defaultValue={code}
+            
+            defaultValue={!code?templates[language]:code}
             onMount={(editor) => {
               editorRef.current = editor;
             }}
