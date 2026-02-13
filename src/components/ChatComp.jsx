@@ -17,22 +17,13 @@ const ChatComp = ({
   const [chats, setChats] = useState([]);
   const chatEndRef = useRef(null);
 
-  // -------------------------
-  // JOIN ROOM
-  // -------------------------
-  useEffect(() => {
-    if (!roomId || !userName) return;
-
-    socket.emit("join-room", { roomId, roomName, userName });
-
-    return () => {
-      socket.emit("leave-room", { roomId, userName });
-    };
-  }, [roomId, userName, roomName]);
 
   // -------------------------
   // SOCKET LISTENERS
   // -------------------------
+  useEffect(()=>{
+    socket.emit("get-messages",{roomId})
+  },[roomId])
   useEffect(() => {
     const handleReceiveMessage = (data) => {
       setChats(data.chats || []);

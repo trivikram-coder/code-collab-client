@@ -85,7 +85,7 @@ main();
   /* ============================= */
   const handleChange = (value) => {
     if (!value) return;
-
+    console.log("Code value : ",value)
     // Ignore if change came from remote update
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
@@ -107,23 +107,7 @@ main();
   useEffect(() => {
   if (!editorRef.current) return;
 
-  const editor = editorRef.current;
-  const model = editor.getModel();
-
-  if (!model) return;   // 🔥 VERY IMPORTANT
-
-  const currentValue = model.getValue();
-
-  if (code !== currentValue) {
-    isRemoteUpdate.current = true;
-
-    editor.executeEdits("", [
-      {
-        range: model.getFullModelRange(),
-        text: code || "",
-      },
-    ]);
-  }
+  
 }, [code]);
 
 
@@ -205,23 +189,32 @@ main();
       <div className="editor-main">
         <div className="editor-wrapper">
           <Editor
-            key={fileId}
-            height="100%"
-            theme="vs-dark"
-            language={language}
-            
-            defaultValue={!code?templates[language]:code}
-            onMount={(editor) => {
-              editorRef.current = editor;
-            }}
-            onChange={handleChange}
-            options={{
-              readOnly: !canEdit,
-              minimap: { enabled: false },
-              fontSize: 14,
-              automaticLayout: true,
-            }}
-          />
+              key={fileId}
+              height="100%"
+              theme="vs-dark"
+              language={language}
+              value={code||templates[language]}
+              onMount={(editor) => {
+                editorRef.current = editor;
+              }}
+              onChange={handleChange}
+              options={{
+                autoClosingBrackets: false,
+
+                readOnly: !canEdit,
+                minimap: { enabled: false },
+                fontSize: 14,
+                automaticLayout: true,
+
+                // 🔥 Disable suggestions
+                quickSuggestions: false,
+                suggestOnTriggerCharacters: false,
+                wordBasedSuggestions: false,
+                parameterHints: { enabled: false },
+                tabCompletion: "off",
+              }}
+            />
+
         </div>
 
         {/* OUTPUT PANEL */}
@@ -229,10 +222,11 @@ main();
           <div className="output-header">Input (STDIN)</div>
 
           <textarea
-            className="input-box"
+            className={`input-box ${!canEdit ? "disabled-btn" : ""}`}
             placeholder="Enter input here..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            disabled={!canEdit}
           />
 
           <div className="output-header">
@@ -250,7 +244,7 @@ main();
             )}
           </div>
 
-          <pre className="output-box">
+          <pre className={`output-box ${!canEdit ? "disabled-btn" : ""}`}>
             {output || "Run code to see output"}
           </pre>
         </div>

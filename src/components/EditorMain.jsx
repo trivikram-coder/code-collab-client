@@ -83,14 +83,27 @@ const EditorMain = () => {
       toast.warning("You are not allowed to delete files");
       return;
     }
-
+    const existsFile=files.find(file=>file.id===id);
+    if(existsFile.createdBy!==userName){
+      toast.warning("You are not allowed to delete this file")
+      return;
+    }
     socket.emit("file-delete", {
       roomId,
       fileId: id,
       userName,
     });
   };
-
+  useEffect(()=>{
+    socket.off("joined-user");
+    const handleJoinedUserAlert=(data)=>{
+      toast.info(data.message)
+    }
+    socket.on("joined-user",handleJoinedUserAlert)
+    return ()=>{
+      socket.off("joined-user",handleJoinedUserAlert)
+    }
+  },[])
   /* ============================= */
   /* 🔥 SOCKET: JOIN ROOM         */
   /* ============================= */
@@ -135,6 +148,7 @@ const EditorMain = () => {
     });
 
     socket.on("file-content-updated", ({ fileId, content }) => {
+      
       setFiles((prev) =>
         prev.map((file) =>
           file.id === fileId ? { ...file, content } : file
