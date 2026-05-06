@@ -6,7 +6,7 @@ import "../styles/Editor.css";
 import UsersList from "./UsersList";
 import { toast } from "react-toastify";
 import api from "./api/api";
-
+import AIChatPage from "./AIChatPage";
 const EditorComp = ({
   fileId,
   roomId,
@@ -75,7 +75,7 @@ main();
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("");
   const [input, setInput] = useState("");
-
+  const[showAI,setShowAI]=useState(false)
   const currentUser = users?.find((u) => u.userName === userName);
   const role = currentUser?.role;
   const canEdit = role === "editor" || role === "admin";
@@ -167,23 +167,40 @@ main();
       </div>
 
       {/* TOOLBAR */}
-      <div className="editor-toolbar">
-        <span className="language-badge">
-          {language?.toUpperCase()}
-        </span>
+      <div className="editor-toolbar d-flex align-items-center gap-2">
+  
+  <span className="language-badge">
+    {language?.toUpperCase()}
+  </span>
 
-        {!loading ? (
-          <button
-            className={`run-btn ${!canEdit ? "disabled-btn" : ""}`}
-            onClick={handleRun}
-            disabled={!canEdit}
-            >
-  ▶ Run
-</button>
-        ) : (
-          <span className="run-btn">Running...</span>
-        )}
-      </div>
+  {/* ✨ AI BUTTON */}
+
+    <button
+      className="btn btn-sm btn-dark"
+      onClick={() => setShowAI(true)}
+      style={{
+        borderRadius: "10px",
+        padding: "6px 14px",
+      }}
+    >
+      ✨ AI
+    </button>
+
+
+  {/* ▶ RUN BUTTON */}
+  {!loading ? (
+    <button
+      className={`run-btn ${!canEdit ? "disabled-btn" : ""}`}
+      onClick={handleRun}
+      disabled={!canEdit}
+    >
+      ▶ Run
+    </button>
+  ) : (
+    <span className="run-btn">Running...</span>
+  )}
+
+</div>
 
       {/* MAIN */}
       <div className="editor-main">
@@ -257,7 +274,61 @@ main();
           />
         </div>
       </div>
+{/* BACKDROP */}
+{showAI && (
+  <div
+    onClick={() => setShowAI(false)}
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.45)",
+      zIndex: 2998,
+    }}
+  />
+)}
 
+{/* AI SIDE PANEL */}
+<div
+  style={{
+    position: "fixed",
+    top: 0,
+    right: 0,
+    width: "420px",
+    height: "100vh",
+    background: "#111",
+    color: "#fff",
+    zIndex: 3000,
+    transition: "0.3s ease",
+    transform: showAI
+      ? "translateX(0)"
+      : "translateX(100%)",
+    display: "flex",
+    flexDirection: "column",
+    borderLeft: "1px solid #333",
+  }}
+>
+  {/* HEADER */}
+  <div className="d-flex justify-content-between align-items-center p-3 border-bottom border-secondary">
+    <h5 className="m-0">✨ AI Assistant</h5>
+
+    <button
+      className="btn btn-sm btn-outline-light"
+      onClick={() => setShowAI(false)}
+    >
+      ✕
+    </button>
+  </div>
+
+  {/* BODY */}
+  <div
+    style={{
+      flex: 1,
+      overflow: "hidden",
+    }}
+  >
+    <AIChatPage />
+  </div>
+</div>
       {/* LEAVE MODAL */}
       {leaveRoomAlertBox && (
         <>
@@ -306,6 +377,7 @@ main();
             </div>
           </div>
           <div className="modal-backdrop fade show"></div>
+          
         </>
       )}
     </div>

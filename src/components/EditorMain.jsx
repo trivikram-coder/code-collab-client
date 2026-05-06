@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Trash } from "lucide-react";
 import socket from "../socket/socket";
 import { toast } from "react-toastify";
+import AIChatPage from "./AIChatPage"; // 🔥 ADD THIS
 
 const EditorMain = () => {
   const navigate = useNavigate();
@@ -19,16 +20,13 @@ const EditorMain = () => {
   const [activeFileId, setActiveFileId] = useState(null);
 
   const [showChat, setShowChat] = useState(false);
+  const [showAI, setShowAI] = useState(false); // 🔥 NEW
   const [unreadCount, setUnreadCount] = useState(0);
   const [users, setUsers] = useState([]);
 
   const activeFile = files.find((f) => f.id === activeFileId);
   const currentUser = users.find((u) => u.userName === userName);
   const currentRole = currentUser?.role;
-
-  /* ============================= */
-  /* 🔥 HELPERS                   */
-  /* ============================= */
 
   const detectLanguage = (filename) => {
     const ext = filename.split(".").pop()?.toLowerCase();
@@ -53,10 +51,6 @@ const EditorMain = () => {
     localStorage.setItem(`activeFile_${roomId}`, id);
   };
 
-  /* ============================= */
-  /* 🔥 FILE ACTIONS              */
-  /* ============================= */
-
   const createFile = () => {
     if (!currentRole || currentRole === "viewer") {
       toast.warning("You are not allowed to add files");
@@ -72,7 +66,7 @@ const EditorMain = () => {
       language: detectLanguage(name),
       content: "",
       createdBy: userName,
-      version:0
+      version: 0,
     };
 
     socket.emit("file-create", { roomId, userName, file: newFile });
@@ -83,30 +77,33 @@ const EditorMain = () => {
       toast.warning("You are not allowed to delete files");
       return;
     }
-    const existsFile=files.find(file=>file.id===id);
-    if(existsFile.createdBy!==userName){
-      toast.warning("You are not allowed to delete this file")
+
+    const existsFile = files.find((file) => file.id === id);
+    if (existsFile.createdBy !== userName) {
+      toast.warning("You are not allowed to delete this file");
       return;
     }
+
     socket.emit("file-delete", {
       roomId,
       fileId: id,
       userName,
     });
   };
-  useEffect(()=>{
+
+  useEffect(() => {
     socket.off("joined-user");
-    const handleJoinedUserAlert=(data)=>{
-      toast.info(data.message)
-    }
-    socket.on("joined-user",handleJoinedUserAlert)
-    return ()=>{
-      socket.off("joined-user",handleJoinedUserAlert)
-    }
-  },[])
-  /* ============================= */
-  /* 🔥 SOCKET: JOIN ROOM         */
-  /* ============================= */
+
+    const handleJoinedUserAlert = (data) => {
+      toast.info(data.message);
+    };
+
+    socket.on("joined-user", handleJoinedUserAlert);
+
+    return () => {
+      socket.off("joined-user", handleJoinedUserAlert);
+    };
+  }, []);
 
   useEffect(() => {
     if (!roomId || !userName) return;
@@ -134,10 +131,6 @@ const EditorMain = () => {
     };
   }, [roomId, userName]);
 
-  /* ============================= */
-  /* 🔥 SOCKET: FILE EVENTS       */
-  /* ============================= */
-
   useEffect(() => {
     socket.on("file-created", (filesFromServer) => {
       setFiles(filesFromServer);
@@ -148,7 +141,6 @@ const EditorMain = () => {
     });
 
     socket.on("file-content-updated", ({ fileId, content }) => {
-      
       setFiles((prev) =>
         prev.map((file) =>
           file.id === fileId ? { ...file, content } : file
@@ -171,18 +163,10 @@ const EditorMain = () => {
     };
   }, [activeFileId]);
 
-  /* ============================= */
-  /* 🔥 LOAD ACTIVE FILE          */
-  /* ============================= */
-
   useEffect(() => {
     const saved = localStorage.getItem(`activeFile_${roomId}`);
     if (saved) setActiveFileId(saved);
   }, [roomId]);
-
-  /* ============================= */
-  /* 🔥 RENDER                    */
-  /* ============================= */
 
   if (!userName || !roomId) {
     return (
@@ -259,7 +243,7 @@ const EditorMain = () => {
         </div>
       </div>
 
-      {/* CHAT BUTTON */}
+      {/* 💬 CHAT BUTTON */}
       <button
         className="chat-float-btn"
         onClick={() => {
@@ -272,6 +256,8 @@ const EditorMain = () => {
           <span className="chat-badge">{unreadCount}</span>
         )}
       </button>
+
+     
 
       {/* CHAT MODAL */}
       {showChat && (
@@ -304,6 +290,8 @@ const EditorMain = () => {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
+
+      
     </div>
   );
 };
