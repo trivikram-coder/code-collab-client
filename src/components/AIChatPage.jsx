@@ -303,7 +303,13 @@ const AIChatPage = () => {
       for (const chunk of chunks) {
         for (const line of chunk.split("\n")) {
           if (!line.startsWith("data: ")) continue;
-          const token = line.slice("data: ".length);
+          let token = line.slice(6);
+
+            try {
+              token = JSON.parse(token);
+            } catch {
+              // fallback
+            }
           if (token === "[DONE]") return accumulated;
           accumulated += token;
           updateLastAiBubble(accumulated);   // normalise happens inside MessageBubble
