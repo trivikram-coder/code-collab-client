@@ -118,22 +118,41 @@ const normalise = (text = "") => {
     .replace(/\*/g, "")
     .replace(/#{1,6} /g, "");
 
-  // Fix merged language+code token
-  out = out.replace(/```(\w+)/g, (_, tag) => {
-    const lower = tag.toLowerCase();
-    if (KNOWN_LANGS.has(lower)) return "```" + tag;
+  // ONLY fix merged fence+code when newline is truly missing
+  out = out.replace(
+    /```([a-zA-Z+#.-]+)([^\n`])/g,
+    (_, lang, firstChar) => {
+      const lower = lang.toLowerCase();
 
-    // Find longest known-language prefix
-    for (let len = Math.min(tag.length - 1, 12); len >= 1; len--) {
-      if (KNOWN_LANGS.has(tag.slice(0, len).toLowerCase())) {
-        return "```" + tag.slice(0, len) + "\n" + tag.slice(len);
+      // exact valid language → preserve
+      if (KNOWN_LANGS.has(lower)) {
+        return "```" + lang + "\n" + firstChar;
       }
-    }
-    return "```code\n" + tag;
-  });
 
-  // Remove stray ```text fences — unwrap their content as plain prose
-  out = out.replace(/```(?:text|plaintext)\n([\s\S]*?)```/g, "$1");
+      // detect merged language+code
+      for (let len = Math.min(lang.length - 1, 12); len >= 1; len--) {
+        const prefix = lang.slice(0, len).toLowerCase();
+
+        if (KNOWN_LANGS.has(prefix)) {
+          return (
+            "```" +
+            lang.slice(0, len) +
+            "\n" +
+            lang.slice(len) +
+            firstChar
+          );
+        }
+      }
+
+      return "```code\n" + lang + firstChar;
+    }
+  );
+
+  // unwrap text fences
+  out = out.replace(
+    /```(?:text|plaintext)\n([\s\S]*?)```/g,
+    "$1"
+  );
 
   return out.trim();
 };
