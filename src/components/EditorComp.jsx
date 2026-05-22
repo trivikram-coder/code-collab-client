@@ -320,12 +320,14 @@ main();
   </div>
 
   {/* BODY */}
-  <div
-    style={{
-      flex: 1,
-      overflow: "hidden",
-    }}
-  >
+<div
+  style={{
+    flex: 1,
+    overflowY: "auto",
+    overflowX: "hidden",
+    minHeight: 0,
+  }}
+>
     <AIChatPage />
   </div>
 </div>
