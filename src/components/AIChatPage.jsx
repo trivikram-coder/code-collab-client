@@ -8,6 +8,7 @@ import { apiUrl } from "./api/api";
 // ---------------------------------------------------------------------------
 
 const MODES = ["chat", "explain", "fix", "analyze"];
+
 const LANGUAGES = ["javascript", "java", "python", "cpp"];
 
 // ---------------------------------------------------------------------------
@@ -15,122 +16,311 @@ const LANGUAGES = ["javascript", "java", "python", "cpp"];
 // ---------------------------------------------------------------------------
 
 const styles = {
-  page:    { background: "#0d1117", color: "#e6edf3", fontFamily: "'JetBrains Mono', 'Fira Code', monospace" },
-  header:  { borderBottom: "1px solid #21262d", background: "#161b22" },
-  chatArea:{ background: "linear-gradient(180deg, #0d1117 0%, #161b22 100%)" },
+  page: {
+    background: "#0d1117",
+    color: "#e6edf3",
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+  },
+
+  header: {
+    borderBottom: "1px solid #21262d",
+    background: "#161b22",
+  },
+
+  chatArea: {
+    background: "linear-gradient(180deg, #0d1117 0%, #161b22 100%)",
+  },
 
   userBubble: {
-    maxWidth: "78%", padding: "12px 16px",
+    maxWidth: "78%",
+    padding: "12px 16px",
     borderRadius: "18px 18px 4px 18px",
     background: "linear-gradient(135deg, #1d4ed8, #2563eb)",
-    color: "#fff", fontSize: 14, lineHeight: 1.75,
-    wordBreak: "break-word", boxShadow: "0 2px 12px rgba(37,99,235,0.35)",
+    color: "#fff",
+    fontSize: 14,
+    lineHeight: 1.75,
+    wordBreak: "break-word",
+    boxShadow: "0 2px 12px rgba(37,99,235,0.35)",
   },
+
   aiBubble: {
-    maxWidth: "78%", padding: "12px 16px",
+    maxWidth: "78%",
+    padding: "12px 16px",
     borderRadius: "18px 18px 18px 4px",
-    background: "#161b22", border: "1px solid #30363d",
-    color: "#e6edf3", fontSize: 14, lineHeight: 1.75,
-    wordBreak: "break-word", boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
+    background: "#161b22",
+    border: "1px solid #30363d",
+    color: "#e6edf3",
+    fontSize: 14,
+    lineHeight: 1.75,
+    wordBreak: "break-word",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
   },
 
   codeWrapper: {
-    margin: "10px 0", borderRadius: 10,
-    overflow: "hidden", border: "1px solid #30363d",
+    margin: "10px 0",
+    borderRadius: 10,
+    overflow: "hidden",
+    border: "1px solid #30363d",
     background: "#010409",
   },
-  codeHeader: {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    padding: "6px 14px", background: "#161b22", borderBottom: "1px solid #30363d",
-  },
-  codeLabel:  { color: "#8b949e", fontSize: 12, fontFamily: "inherit" },
-  copyBtn: {
-    background: "#21262d", border: "1px solid #30363d", borderRadius: 6,
-    color: "#c9d1d9", fontSize: 12, padding: "2px 10px", cursor: "pointer",
-  },
-  syntaxStyle: {
-    margin: 0, padding: "14px 16px", background: "#010409",
-    fontSize: 13, lineHeight: 1.6, borderRadius: 0, overflowX: "auto",
-  },
-  codeTag: { fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace", fontSize: 13 },
 
-  footer:      { borderTop: "1px solid #21262d", background: "#161b22" },
-  codeInput:   { background: "#010409", borderRadius: 10, resize: "none", padding: 12, fontSize: 13, boxShadow: "none", color: "#e6edf3", fontFamily: "inherit", border: "1px solid #30363d" },
-  messageInput:{ background: "#010409", borderRadius: 10, height: 46, paddingLeft: 14, fontSize: 14, boxShadow: "none", color: "#e6edf3", border: "1px solid #30363d" },
-  langSelect:  { width: 130, background: "#010409", borderRadius: 10, height: 46, fontSize: 13, boxShadow: "none", color: "#e6edf3", border: "1px solid #30363d" },
-  modeSelect:  { width: 130, background: "#21262d", borderRadius: 10, border: "none", color: "#e6edf3" },
+  codeHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "6px 14px",
+    background: "#161b22",
+    borderBottom: "1px solid #30363d",
+  },
+
+  codeLabel: {
+    color: "#8b949e",
+    fontSize: 12,
+    fontFamily: "inherit",
+  },
+
+  copyBtn: {
+    background: "#21262d",
+    border: "1px solid #30363d",
+    borderRadius: 6,
+    color: "#c9d1d9",
+    fontSize: 12,
+    padding: "2px 10px",
+    cursor: "pointer",
+  },
+
+  syntaxStyle: {
+    margin: 0,
+    padding: "14px 16px",
+    background: "#010409",
+    fontSize: 13,
+    lineHeight: 1.6,
+    borderRadius: 0,
+    overflowX: "auto",
+  },
+
+  codeTag: {
+    fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+    fontSize: 13,
+  },
+
+  footer: {
+    borderTop: "1px solid #21262d",
+    background: "#161b22",
+  },
+
+  codeInput: {
+    background: "#010409",
+    borderRadius: 10,
+    resize: "none",
+    padding: 12,
+    fontSize: 13,
+    boxShadow: "none",
+    color: "#e6edf3",
+    fontFamily: "inherit",
+    border: "1px solid #30363d",
+  },
+
+  messageInput: {
+    background: "#010409",
+    borderRadius: 10,
+    height: 46,
+    paddingLeft: 14,
+    fontSize: 14,
+    boxShadow: "none",
+    color: "#e6edf3",
+    border: "1px solid #30363d",
+  },
+
+  langSelect: {
+    width: 130,
+    background: "#010409",
+    borderRadius: 10,
+    height: 46,
+    fontSize: 13,
+    boxShadow: "none",
+    color: "#e6edf3",
+    border: "1px solid #30363d",
+  },
+
+  modeSelect: {
+    width: 130,
+    background: "#21262d",
+    borderRadius: 10,
+    border: "none",
+    color: "#e6edf3",
+  },
+
   sendBtn: {
-    height: 46, minWidth: 88, borderRadius: 10,
+    height: 46,
+    minWidth: 88,
+    borderRadius: 10,
     background: "linear-gradient(135deg, #1d4ed8, #2563eb)",
-    border: "none", color: "#fff", fontWeight: 600, fontSize: 14,
-    boxShadow: "0 2px 10px rgba(37,99,235,0.4)", cursor: "pointer",
+    border: "none",
+    color: "#fff",
+    fontWeight: 600,
+    fontSize: 14,
+    boxShadow: "0 2px 10px rgba(37,99,235,0.4)",
+    cursor: "pointer",
   },
 };
+
+// ---------------------------------------------------------------------------
+// Language map — normalises AI output labels → valid Prism language strings
+// Prism uses "markup" for html/xml, "csharp" for cs, etc.
+// ---------------------------------------------------------------------------
+
+const LANG_MAP = {
+  javascript: "javascript",
+  typescript: "typescript",
+  python:     "python",
+  java:       "java",
+  cpp:        "cpp",
+  c:          "c",
+  csharp:     "csharp",
+  cs:         "csharp",
+  go:         "go",
+  rust:       "rust",
+  ruby:       "ruby",
+  php:        "php",
+  swift:      "swift",
+  kotlin:     "kotlin",
+  bash:       "bash",
+  sh:         "bash",
+  html:       "markup",
+  xml:        "markup",
+  css:        "css",
+  json:       "json",
+  sql:        "sql",
+  code:       "javascript",
+  plaintext:  "plaintext",
+};
+
+// ---------------------------------------------------------------------------
+// Known languages — full names only, NO short aliases like js / ts / py.
+// Short aliases cause split bugs e.g. python → py + thon.
+// ---------------------------------------------------------------------------
+
+const KNOWN_LANGS = new Set([
+  "javascript",
+  "typescript",
+  "python",
+  "java",
+  "cpp",
+  "csharp",
+  "cs",
+  "c",
+  "go",
+  "rust",
+  "ruby",
+  "php",
+  "swift",
+  "kotlin",
+  "bash",
+  "sh",
+  "html",
+  "css",
+  "json",
+  "xml",
+  "sql",
+  "text",
+  "code",
+  "plaintext",
+]);
+
+// Words that are language names or bad-split fragments that leak as the
+// first line of a code block — stripped by the final normalise pass.
+const LANG_WORDS = new Set([
+  "java",
+  "python",
+  "thon",
+  "javascript",
+  "typescript",
+  "script",
+  "cpp",
+  "csharp",
+  "kotlin",
+  "swift",
+  "ruby",
+  "bash",
+  "html",
+  "css",
+  "json",
+  "sql",
+  "code",
+  "text",
+  "pp",   // leftover from cpp bad split
+  "on",   // leftover from python bad split
+]);
 
 // ---------------------------------------------------------------------------
 // Text helpers
 // ---------------------------------------------------------------------------
 
-// Language tags the model is allowed to emit as-is.
-// Anything longer is assumed to be a merged language+code token.
-const KNOWN_LANGS = new Set([
-  "javascript", "js", "typescript", "ts", "python", "py",
-  "java", "cpp", "c", "cs", "csharp", "go", "rust", "ruby",
-  "php", "swift", "kotlin", "bash", "sh", "html", "css",
-  "json", "xml", "sql", "text", "code", "plaintext",
-]);
-
 /**
  * Expands C-style one-liner code into multi-line format.
- * "function foo() { if (x) { return 1; } return 0; }"
- *  → proper indented block
  * Only fires when the entire code body is a single line.
  */
 const expandOneLiner = (code, lang) => {
-  // Only expand C-style languages
-  if (!["javascript","js","typescript","ts","java","cpp","c","cs","csharp"].includes(lang)) {
+  const cStyleLangs = [
+    "javascript",
+    "typescript",
+    "java",
+    "cpp",
+    "c",
+    "cs",
+    "csharp",
+  ];
+
+  if (!cStyleLangs.includes(lang)) {
     return code;
   }
-  // If there are already real newlines inside the block, leave it alone
-  if (code.includes("\n")) return code;
 
-  // Insert newline + indent after { and before }
+  if (code.includes("\n")) {
+    return code;
+  }
+
   return code
     .replace(/\{\s*/g, "{\n  ")
     .replace(/;\s*(?=[^\s}])/g, ";\n  ")
     .replace(/\s*\}/g, "\n}")
-    .replace(/\n {2}(\n\})/g, "$1")  // remove trailing spaces before closing brace
+    .replace(/\n {2}(\n\})/g, "$1")
     .trim();
 };
 
 /**
- * Fixes raw model output before rendering:
+ * Normalises raw model output before rendering:
  *  1. Normalise line endings and escaped newlines
  *  2. Strip prose markdown markers
- *  3. Split merged language+code tokens:  ```javascriptfunction → ```javascript\nfunction
- *  4. Remove stray ```text fences — model sometimes wraps plain prose in them
+ *  3. Split merged language+code tokens — checks LONGER prefixes first
+ *     so "cpp" always wins over "c" (prevents "pp" leaking as first line)
+ *  4. Unwrap stray text/plaintext fences
+ *  5. Strip any bare language-name word leaked as the first line of a code block
  */
 const normalise = (text = "") => {
+
   let out = text
     .replace(/\\n/g, "\n")
     .replace(/\r/g, "")
     .replace(/\*\*/g, "")
     .replace(/\*/g, "")
-    .replace(/#{1,6} /g, "");
+    .replace(/^#{1,6} /gm, "");   // ✅ only strips markdown headers, not Python comments
 
-  // ONLY fix merged fence+code when newline is truly missing
+  // Fix merged fence+code when newline is truly missing.
+  // Start from LONGEST prefix (min 2) so "cpp" wins before "c" is tried.
+  // Single-char fallback only if nothing else matched.
   out = out.replace(
     /```([a-zA-Z+#.-]+)([^\n`])/g,
     (_, lang, firstChar) => {
       const lower = lang.toLowerCase();
 
-      // exact valid language → preserve
+      // Exact valid language — just insert the missing newline
       if (KNOWN_LANGS.has(lower)) {
         return "```" + lang + "\n" + firstChar;
       }
 
-      // detect merged language+code
-      for (let len = Math.min(lang.length - 1, 12); len >= 1; len--) {
+      // Try longest prefix first (min length 2)
+      for (let len = Math.min(lang.length - 1, 12); len >= 2; len--) {
         const prefix = lang.slice(0, len).toLowerCase();
 
         if (KNOWN_LANGS.has(prefix)) {
@@ -144,15 +334,33 @@ const normalise = (text = "") => {
         }
       }
 
+      // Single-char fallback — last resort
+      if (KNOWN_LANGS.has(lang.slice(0, 1).toLowerCase())) {
+        return (
+          "```" +
+          lang.slice(0, 1) +
+          "\n" +
+          lang.slice(1) +
+          firstChar
+        );
+      }
+
       return "```code\n" + lang + firstChar;
     }
   );
 
-  // unwrap text fences
+  // Unwrap plain-text fences — model sometimes wraps prose in them
   out = out.replace(
     /```(?:text|plaintext)\n([\s\S]*?)```/g,
     "$1"
   );
+
+  // Strip any bare language-name word leaked as the first line of a code block.
+  // Runs LAST so it catches anything the earlier passes missed.
+  out = out.replace(/(```[\w]*\n)(\w+\n)/g, (match, fence, firstLine) => {
+    const word = firstLine.trim().toLowerCase();
+    return LANG_WORDS.has(word) ? fence : match;
+  });
 
   return out.trim();
 };
@@ -162,27 +370,35 @@ const normalise = (text = "") => {
  */
 const parseSegments = (text) => {
   const segments = [];
-  // Matches: ```lang\n<code body>```
-  const FENCE = /```([\w+#.-]*)\n([\s\S]*?)```/g;
-  let cursor = 0;
+  const FENCE    = /```([\w+#.-]*)\n([\s\S]*?)```/g;
+  let cursor     = 0;
   let match;
 
   while ((match = FENCE.exec(text)) !== null) {
     if (match.index > cursor) {
-      segments.push({ type: "text", content: text.slice(cursor, match.index) });
+      segments.push({
+        type:    "text",
+        content: text.slice(cursor, match.index),
+      });
     }
+
     const lang    = match[1] || "code";
     const rawCode = match[2].trimEnd();
+
     segments.push({
-      type: "code",
+      type:     "code",
       language: lang,
-      content: expandOneLiner(rawCode, lang.toLowerCase()),
+      content:  expandOneLiner(rawCode, lang.toLowerCase()),
     });
+
     cursor = FENCE.lastIndex;
   }
 
   if (cursor < text.length) {
-    segments.push({ type: "text", content: text.slice(cursor) });
+    segments.push({
+      type:    "text",
+      content: text.slice(cursor),
+    });
   }
 
   return segments;
@@ -192,36 +408,64 @@ const parseSegments = (text) => {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-const CodeBlock = ({ language, content }) => (
-  <div style={styles.codeWrapper}>
-    <div style={styles.codeHeader}>
-      <span style={styles.codeLabel}>{language}</span>
-      <button style={styles.copyBtn} onClick={() => navigator.clipboard.writeText(content)}>
-        Copy
-      </button>
-    </div>
-    <SyntaxHighlighter
-      language={language}
-      style={oneDark}
-      wrapLongLines={false}
-      customStyle={styles.syntaxStyle}
-      codeTagProps={{ style: styles.codeTag }}
-    >
-      {content}
-    </SyntaxHighlighter>
-  </div>
-);
+const CodeBlock = ({ language, content, selectedLanguage }) => {
+  const LANG_MAP = {
+    javascript: "javascript",
+    java:       "java",
+    python:     "python",
+    cpp:        "cpp",
+  };
 
-const MessageBubble = ({ role, text }) => {
-  const segments = parseSegments(normalise(text));
+  // Always show the user-selected language as label, not what AI outputs
+  const displayLabel = selectedLanguage || language;
+  const prismLang    = LANG_MAP[displayLabel] || "javascript";
+
   return (
-    <div className={`d-flex mb-3 ${role === "user" ? "justify-content-end" : "justify-content-start"}`}>
+    <div style={styles.codeWrapper}>
+      <div style={styles.codeHeader}>
+        <span style={styles.codeLabel}>{displayLabel}</span>
+        <button
+          style={styles.copyBtn}
+          onClick={() => navigator.clipboard.writeText(content)}
+        >
+          Copy
+        </button>
+      </div>
+      <SyntaxHighlighter
+        language={prismLang}
+        style={oneDark}
+        wrapLongLines={false}
+        customStyle={styles.syntaxStyle}
+        codeTagProps={{ style: styles.codeTag }}
+      >
+        {content}
+      </SyntaxHighlighter>
+    </div>
+  );
+};
+
+const MessageBubble = ({ role, text, selectedLanguage }) => {
+  const segments = parseSegments(normalise(text));
+
+  return (
+    <div
+      className={`d-flex mb-3 ${
+        role === "user" ? "justify-content-end" : "justify-content-start"
+      }`}
+    >
       <div style={role === "user" ? styles.userBubble : styles.aiBubble}>
         {segments.map((seg, i) =>
           seg.type === "code" ? (
-            <CodeBlock key={i} language={seg.language} content={seg.content} />
+            <CodeBlock
+              key={i}
+              language={seg.language}
+              content={seg.content}
+              selectedLanguage={selectedLanguage}
+            />
           ) : (
-            <span key={i} style={{ whiteSpace: "pre-wrap" }}>{seg.content}</span>
+            <span key={i} style={{ whiteSpace: "pre-wrap" }}>
+              {seg.content}
+            </span>
           )
         )}
       </div>
@@ -230,9 +474,14 @@ const MessageBubble = ({ role, text }) => {
 };
 
 const EmptyState = () => (
-  <div className="h-100 d-flex flex-column justify-content-center align-items-center text-center" style={{ color: "#484f58" }}>
+  <div
+    className="h-100 d-flex flex-column justify-content-center align-items-center text-center"
+    style={{ color: "#484f58" }}
+  >
     <div style={{ fontSize: 56 }}>✦</div>
-    <h5 className="mt-3 fw-semibold" style={{ color: "#8b949e" }}>Ask anything about your code</h5>
+    <h5 className="mt-3 fw-semibold" style={{ color: "#8b949e" }}>
+      Ask anything about your code
+    </h5>
     <p style={{ maxWidth: 300, fontSize: 13, color: "#484f58" }}>
       Chat, explain, fix, or analyze — all in one place.
     </p>
@@ -251,8 +500,8 @@ const AIChatPage = () => {
   const [chat,     setChat]     = useState([]);
   const [loading,  setLoading]  = useState(false);
 
-  // Conversation history sent to the backend — kept in a ref so
-  // streaming closures always see the latest value without stale captures.
+  // Conversation history kept in a ref so streaming closures always see
+  // the latest value without stale captures.
   const historyRef = useRef([]);
   const chatEndRef = useRef(null);
 
@@ -262,7 +511,7 @@ const AIChatPage = () => {
 
   const updateLastAiBubble = (text) => {
     setChat((prev) => {
-      const next = [...prev];
+      const next            = [...prev];
       next[next.length - 1] = { ...next[next.length - 1], text };
       return next;
     });
@@ -278,41 +527,45 @@ const AIChatPage = () => {
 
   const streamResponse = async (endpoint, payload) => {
     const res = await fetch(`${apiUrl}/ai/${endpoint}`, {
-      method: "POST",
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      body:    JSON.stringify({
         ...payload,
         chatHistory: historyRef.current,
-        stream: true,
+        stream:      true,
       }),
     });
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+    const reader    = res.body.getReader();
+    const decoder   = new TextDecoder();
     let accumulated = "";
-    let buffer = "";
+    let buffer      = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
+
       const chunks = buffer.split("\n\n");
-      buffer = chunks.pop();
+      buffer       = chunks.pop();
 
       for (const chunk of chunks) {
         for (const line of chunk.split("\n")) {
           if (!line.startsWith("data: ")) continue;
+
           let token = line.slice(6);
 
-            try {
-              token = JSON.parse(token);
-            } catch {
-              // fallback
-            }
+          try {
+            token = JSON.parse(token);
+          } catch {
+            // raw string fallback
+          }
+
           if (token === "[DONE]") return accumulated;
+
           accumulated += token;
-          updateLastAiBubble(accumulated);   // normalise happens inside MessageBubble
+          updateLastAiBubble(accumulated);
         }
       }
     }
@@ -323,24 +576,44 @@ const AIChatPage = () => {
   const handleSend = async () => {
     if (!message.trim() && !code.trim()) return;
 
-    const userText = message || code;
-    const payload  = { message, code, language };
+    const userText = message.trim() || `[${language} code]`;
+
+    // Send trimmed values — backend handles empty code gracefully
+    const payload = {
+      message:  message.trim(),
+      code:     code.trim(),
+      language,
+    };
+
+    // Build what to show in the user bubble
+    const bubbleText =
+      message.trim() +
+      (code.trim()
+        ? (message.trim() ? "\n\n" : "") +
+          "```" + language + "\n" + code.trim() + "\n```"
+        : "");
 
     setMessage("");
     setCode("");
     setLoading(true);
 
-    setChat((prev) => [
-      ...prev,
-      { role: "user", text: userText },
-      { role: "ai",   text: "" },
-    ]);
+    // In handleSend — store language with the AI message
+setChat((prev) => [
+  ...prev,
+  { role: "user", text: bubbleText || userText, language },
+  { role: "ai",   text: "",                     language },
+]);
+
+// In the render — pass selectedLanguage to MessageBubble
 
     try {
       const aiReply = await streamResponse(mode, payload);
-      if (aiReply) commitToHistory(userText, aiReply);
+      if (aiReply) commitToHistory(bubbleText || userText, aiReply);
     } catch {
-      setChat((prev) => [...prev, { role: "ai", text: "Something went wrong." }]);
+      setChat((prev) => [
+        ...prev,
+        { role: "ai", text: "Something went wrong." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -357,9 +630,17 @@ const AIChatPage = () => {
     <div className="d-flex flex-column h-100" style={styles.page}>
 
       {/* ── Header ── */}
-      <div className="d-flex justify-content-between align-items-center px-4 py-3" style={styles.header}>
+      <div
+        className="d-flex justify-content-between align-items-center px-4 py-3"
+        style={styles.header}
+      >
         <div>
-          <h6 className="m-0 fw-bold" style={{ color: "#e6edf3", letterSpacing: "0.3px" }}>✦ AI Assistant</h6>
+          <h6
+            className="m-0 fw-bold"
+            style={{ color: "#e6edf3", letterSpacing: "0.3px" }}
+          >
+            ✦ AI Assistant
+          </h6>
           <small style={{ color: "#484f58" }}>Your coding copilot</small>
         </div>
         <select
@@ -369,24 +650,36 @@ const AIChatPage = () => {
           onChange={(e) => setMode(e.target.value)}
         >
           {MODES.map((m) => (
-            <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+            <option key={m} value={m}>
+              {m.charAt(0).toUpperCase() + m.slice(1)}
+            </option>
           ))}
         </select>
       </div>
 
       {/* ── Chat area ── */}
-      <div className="flex-grow-1 overflow-auto px-3 py-4" style={styles.chatArea}>
+      <div
+        className="flex-grow-1 overflow-auto px-3 py-4"
+        style={styles.chatArea}
+      >
         {chat.length === 0 && <EmptyState />}
 
-        {chat.map((msg, i) => (
-          <MessageBubble key={i} role={msg.role} text={msg.text} />
-        ))}
+       {chat.map((msg, i) => (
+  <MessageBubble
+    key={i}
+    role={msg.role}
+    text={msg.text}
+    selectedLanguage={msg.language}
+  />
+))}
+
 
         {loading && (
           <div style={{ color: "#484f58", fontSize: 13, paddingLeft: 4 }}>
             ✦ thinking…
           </div>
         )}
+
         <div ref={chatEndRef} />
       </div>
 
@@ -420,7 +713,11 @@ const AIChatPage = () => {
               <option key={lang}>{lang}</option>
             ))}
           </select>
-          <button onClick={handleSend} disabled={loading} style={styles.sendBtn}>
+          <button
+            onClick={handleSend}
+            disabled={loading}
+            style={styles.sendBtn}
+          >
             {loading ? "…" : "Send"}
           </button>
         </div>
