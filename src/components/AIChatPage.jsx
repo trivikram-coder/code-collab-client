@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, memo } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { apiUrl } from "./api/api";
@@ -119,6 +119,10 @@ const styles = {
     color: "#e6edf3",
     fontFamily: "inherit",
     border: "1px solid #30363d",
+    "::placeholder": {
+    color: "#ffffff",
+    opacity: 1,
+  },
   },
 
   messageInput: {
@@ -130,6 +134,10 @@ const styles = {
     boxShadow: "none",
     color: "#e6edf3",
     border: "1px solid #30363d",
+    "::placeholder": {
+    color: "#ffffff",
+    opacity: 1,
+  },
   },
 
   langSelect: {
@@ -166,39 +174,19 @@ const styles = {
 };
 
 // ---------------------------------------------------------------------------
-// Language map — normalises AI output labels → valid Prism language strings
-// Prism uses "markup" for html/xml, "csharp" for cs, etc.
+// Language map — AI label → valid Prism language string
 // ---------------------------------------------------------------------------
 
 const LANG_MAP = {
   javascript: "javascript",
-  typescript: "typescript",
-  python:     "python",
   java:       "java",
+  python:     "python",
   cpp:        "cpp",
-  c:          "c",
-  csharp:     "csharp",
-  cs:         "csharp",
-  go:         "go",
-  rust:       "rust",
-  ruby:       "ruby",
-  php:        "php",
-  swift:      "swift",
-  kotlin:     "kotlin",
-  bash:       "bash",
-  sh:         "bash",
-  html:       "markup",
-  xml:        "markup",
-  css:        "css",
-  json:       "json",
-  sql:        "sql",
-  code:       "javascript",
-  plaintext:  "plaintext",
 };
 
 // ---------------------------------------------------------------------------
-// Known languages — full names only, NO short aliases like js / ts / py.
-// Short aliases cause split bugs e.g. python → py + thon.
+// Known languages — full names only, NO short aliases like js / ts / py
+// Short aliases cause split bugs e.g. python → py + thon
 // ---------------------------------------------------------------------------
 
 const KNOWN_LANGS = new Set([
@@ -228,8 +216,8 @@ const KNOWN_LANGS = new Set([
   "plaintext",
 ]);
 
-// Words that are language names or bad-split fragments that leak as the
-// first line of a code block — stripped by the final normalise pass.
+// Language name words or bad-split fragments that leak as first line
+// of a code block — stripped by the final normalise pass
 const LANG_WORDS = new Set([
   "java",
   "python",
@@ -249,8 +237,8 @@ const LANG_WORDS = new Set([
   "sql",
   "code",
   "text",
-  "pp",   // leftover from cpp bad split
-  "on",   // leftover from python bad split
+  "pp",
+  "on",
 ]);
 
 // ---------------------------------------------------------------------------
@@ -289,37 +277,58 @@ const expandOneLiner = (code, lang) => {
 };
 
 /**
- * Normalises raw model output before rendering:
- *  1. Normalise line endings and escaped newlines
- *  2. Strip prose markdown markers
- *  3. Split merged language+code tokens — checks LONGER prefixes first
- *     so "cpp" always wins over "c" (prevents "pp" leaking as first line)
+ * Normalises raw model output before rendering.
+ *
+ * Key fix: split on code fences FIRST, then only clean prose sections.
+ * Code block content is NEVER touched by markdown strippers so that:
+ *   - Python # comments are preserved
+ *   - *args and **kwargs are preserved
+ *   - f-strings and any * or # inside code are preserved
+ *
+ * Steps:
+ *  1. Split text into [prose, codeblock, prose, codeblock, ...] alternating parts
+ *  2. Only apply markdown stripping to prose parts (even indexes)
+ *  3. Rejoin and fix merged fence+language tokens
  *  4. Unwrap stray text/plaintext fences
- *  5. Strip any bare language-name word leaked as the first line of a code block
+ *  5. Strip bare language-name words leaked as first line of a code block
  */
 const normalise = (text = "") => {
-
-  let out = text
-    .replace(/\\n/g, "\n")
+  // Split into prose and code fence sections — keep fences in the array
+  const parts = text
     .replace(/\r/g, "")
-    .replace(/\*\*/g, "")
-    .replace(/\*/g, "")
-    .replace(/^#{1,6} /gm, "");   // ✅ only strips markdown headers, not Python comments
+    .split(/(```[\s\S]*?```)/g);
+
+  const cleaned = parts.map((part, i) => {
+    // Odd indexes are code blocks — leave them completely untouched
+    if (i % 2 === 1) {
+      return part;
+    }
+
+    // Even indexes are prose — safe to strip markdown here
+    return part
+      .replace(/\\n/g, "\n")
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      // ^ + m flag: only strips markdown headers at line start,
+      // never # inline comments inside prose or code
+      .replace(/^#{1,6} /gm, "");
+  });
+
+  let out = cleaned.join("");
 
   // Fix merged fence+code when newline is truly missing.
-  // Start from LONGEST prefix (min 2) so "cpp" wins before "c" is tried.
-  // Single-char fallback only if nothing else matched.
+  // Loop from LONGEST prefix (min 2) so cpp wins before c is tried.
   out = out.replace(
     /```([a-zA-Z+#.-]+)([^\n`])/g,
     (_, lang, firstChar) => {
       const lower = lang.toLowerCase();
 
-      // Exact valid language — just insert the missing newline
+      // Exact valid language — insert missing newline only
       if (KNOWN_LANGS.has(lower)) {
         return "```" + lang + "\n" + firstChar;
       }
 
-      // Try longest prefix first (min length 2)
+      // Longest prefix first (min length 2)
       for (let len = Math.min(lang.length - 1, 12); len >= 2; len--) {
         const prefix = lang.slice(0, len).toLowerCase();
 
@@ -334,7 +343,7 @@ const normalise = (text = "") => {
         }
       }
 
-      // Single-char fallback — last resort
+      // Single-char fallback — last resort only
       if (KNOWN_LANGS.has(lang.slice(0, 1).toLowerCase())) {
         return (
           "```" +
@@ -355,7 +364,7 @@ const normalise = (text = "") => {
     "$1"
   );
 
-  // Strip any bare language-name word leaked as the first line of a code block.
+  // Strip bare language-name word leaked as first line of a code block.
   // Runs LAST so it catches anything the earlier passes missed.
   out = out.replace(/(```[\w]*\n)(\w+\n)/g, (match, fence, firstLine) => {
     const word = firstLine.trim().toLowerCase();
@@ -406,17 +415,11 @@ const parseSegments = (text) => {
 
 // ---------------------------------------------------------------------------
 // Sub-components
+// memo() stops MessageBubble re-rendering unless its own props change —
+// fixes lag during streaming (only the last AI bubble re-renders per token)
 // ---------------------------------------------------------------------------
 
 const CodeBlock = ({ language, content, selectedLanguage }) => {
-  const LANG_MAP = {
-    javascript: "javascript",
-    java:       "java",
-    python:     "python",
-    cpp:        "cpp",
-  };
-
-  // Always show the user-selected language as label, not what AI outputs
   const displayLabel = selectedLanguage || language;
   const prismLang    = LANG_MAP[displayLabel] || "javascript";
 
@@ -444,7 +447,8 @@ const CodeBlock = ({ language, content, selectedLanguage }) => {
   );
 };
 
-const MessageBubble = ({ role, text, selectedLanguage }) => {
+// memo — skips re-render if role + text + selectedLanguage unchanged
+const MessageBubble = memo(({ role, text, selectedLanguage }) => {
   const segments = parseSegments(normalise(text));
 
   return (
@@ -471,7 +475,7 @@ const MessageBubble = ({ role, text, selectedLanguage }) => {
       </div>
     </div>
   );
-};
+});
 
 const EmptyState = () => (
   <div
@@ -500,8 +504,8 @@ const AIChatPage = () => {
   const [chat,     setChat]     = useState([]);
   const [loading,  setLoading]  = useState(false);
 
-  // Conversation history kept in a ref so streaming closures always see
-  // the latest value without stale captures.
+  // Conversation history kept in a ref so streaming closures always
+  // see the latest value without stale captures
   const historyRef = useRef([]);
   const chatEndRef = useRef(null);
 
@@ -509,6 +513,8 @@ const AIChatPage = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
+  // Only updates the last AI bubble — other bubbles stay untouched.
+  // Combined with memo() this makes streaming feel word-by-word
   const updateLastAiBubble = (text) => {
     setChat((prev) => {
       const next            = [...prev];
@@ -578,14 +584,12 @@ const AIChatPage = () => {
 
     const userText = message.trim() || `[${language} code]`;
 
-    // Send trimmed values — backend handles empty code gracefully
     const payload = {
       message:  message.trim(),
       code:     code.trim(),
       language,
     };
 
-    // Build what to show in the user bubble
     const bubbleText =
       message.trim() +
       (code.trim()
@@ -597,14 +601,13 @@ const AIChatPage = () => {
     setCode("");
     setLoading(true);
 
-    // In handleSend — store language with the AI message
-setChat((prev) => [
-  ...prev,
-  { role: "user", text: bubbleText || userText, language },
-  { role: "ai",   text: "",                     language },
-]);
-
-// In the render — pass selectedLanguage to MessageBubble
+    // Store language on each message so correct label + highlighting
+    // is always used regardless of what AI outputs in its fence tag
+    setChat((prev) => [
+      ...prev,
+      { role: "user", text: bubbleText || userText, language },
+      { role: "ai",   text: "",                     language },
+    ]);
 
     try {
       const aiReply = await streamResponse(mode, payload);
@@ -664,15 +667,14 @@ setChat((prev) => [
       >
         {chat.length === 0 && <EmptyState />}
 
-       {chat.map((msg, i) => (
-  <MessageBubble
-    key={i}
-    role={msg.role}
-    text={msg.text}
-    selectedLanguage={msg.language}
-  />
-))}
-
+        {chat.map((msg, i) => (
+          <MessageBubble
+            key={i}
+            role={msg.role}
+            text={msg.text}
+            selectedLanguage={msg.language}
+          />
+        ))}
 
         {loading && (
           <div style={{ color: "#484f58", fontSize: 13, paddingLeft: 4 }}>
@@ -684,6 +686,14 @@ setChat((prev) => [
       </div>
 
       {/* ── Input ── */}
+      <style>
+  {`
+    .form-control::placeholder {
+      color: #cfcece !important;
+      opacity: 1 !important;
+    }
+  `}
+</style>
       <div className="p-3" style={styles.footer}>
         <textarea
           className="form-control mb-2"
