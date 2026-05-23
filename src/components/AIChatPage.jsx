@@ -15,6 +15,7 @@ const LANGUAGES = ["javascript", "java", "python", "cpp"];
 // Styles
 // ---------------------------------------------------------------------------
 
+
 const styles = {
   page: {
     background: "#0d1117",
@@ -543,14 +544,26 @@ const AIChatPage = () => {
 
   const streamResponse = async (endpoint, payload) => {
     const res = await fetch(`${apiUrl}/ai/${endpoint}`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({
-        ...payload,
-        chatHistory: historyRef.current,
-        stream:      true,
-      }),
-    });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    ...payload,
+    chatHistory: historyRef.current,
+    stream: true,
+  }),
+});
+
+// Handle rate limiting
+if (res.status === 429) {
+  throw new Error("Too many requests. Please wait a minute.");
+}
+
+// Handle other errors
+if (!res.ok) {
+  throw new Error("Request failed");
+}
 
     const reader    = res.body.getReader();
     const decoder   = new TextDecoder();
@@ -622,12 +635,17 @@ const AIChatPage = () => {
     try {
       const aiReply = await streamResponse(mode, payload);
       if (aiReply) commitToHistory(bubbleText || userText, aiReply);
-    } catch {
-      setChat((prev) => [
-        ...prev,
-        { role: "ai", text: "Something went wrong." },
-      ]);
-    } finally {
+    }  catch (error) {
+  setChat((prev) => [
+    ...prev,
+    {
+      role: "ai",
+      text:
+        error.message ||
+        "Something went wrong.",
+    },
+  ]);
+}finally {
       setLoading(false);
     }
   };
