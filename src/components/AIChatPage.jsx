@@ -422,16 +422,26 @@ const parseSegments = (text) => {
 const CodeBlock = ({ language, content, selectedLanguage }) => {
   const displayLabel = selectedLanguage || language;
   const prismLang    = LANG_MAP[displayLabel] || "javascript";
+  const [copied, setCopied] = useState(false);
 
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(content);
+
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  };
   return (
     <div style={styles.codeWrapper}>
       <div style={styles.codeHeader}>
         <span style={styles.codeLabel}>{displayLabel}</span>
         <button
           style={styles.copyBtn}
-          onClick={() => navigator.clipboard.writeText(content)}
+          onClick={handleCopy}
         >
-          Copy
+          {copied ? "Copied!" : "Copy"}
         </button>
       </div>
       <SyntaxHighlighter
